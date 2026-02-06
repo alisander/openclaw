@@ -305,6 +305,25 @@ export async function runReplyAgent(params: {
         `Role ordering conflict (${reason}). Restarting session ${sessionKey} -> ${nextSessionId}.`,
       cleanupTranscripts: true,
     });
+  // SaaS pre-flight: check credit balance before LLM call
+  if (process.env.OPENCLAW_SAAS_MODE === "1" && sessionKey) {
+    try {
+      const { checkBalance } = await import("../../saas/services/credit-manager.js");
+      const { getTenantByAgentId } = await import("../../saas/services/tenant-registry.js");
+      const agentId = resolveAgentIdFromSessionKey(sessionKey);
+      const tenant = await getTenantByAgentId(agentId);
+      if (tenant) {
+        const hasCredits = await checkBalance(tenant.id);
+        if (!hasCredits) {
+          typing.cleanup();
+          return { text: "Your credit balance is empty. Please purchase more credits to continue." } as ReplyPayload;
+        }
+      }
+    } catch {
+      // Non-fatal: allow the request to proceed if credit check fails
+    }
+  }
+
   try {
     const runStartedAt = Date.now();
     const runOutcome = await runAgentTurnWithFallback({
@@ -394,6 +413,34 @@ export async function runReplyAgent(params: {
       systemPromptReport: runResult.meta.systemPromptReport,
       cliSessionId,
     });
+
+    // SaaS metering: record usage and debit credits
+    if (process.env.OPENCLAW_SAAS_MODE === "1" && usage && sessionKey) {
+      try {
+        const { meterUsage } = await import("../../saas/services/usage-metering.js");
+        const { getTenantByAgentId } = await import("../../saas/services/tenant-registry.js");
+        const agentId = resolveAgentIdFromSessionKey(sessionKey);
+        const tenant = await getTenantByAgentId(agentId);
+        if (tenant) {
+          await meterUsage(
+            {
+              tenantId: tenant.id,
+              sessionKey,
+              provider: providerUsed,
+              model: modelUsed,
+              inputTokens: usage.input ?? 0,
+              outputTokens: usage.output ?? 0,
+              cacheReadTokens: usage.cacheRead ?? 0,
+              cacheWriteTokens: usage.cacheWrite ?? 0,
+            },
+            tenant.plan,
+          );
+        }
+      } catch (meterErr) {
+        // Non-fatal: log and continue
+        console.error("[saas-metering] Failed to meter usage:", meterErr);
+      }
+    }
 
     // Drain any late tool/block deliveries before deciding there's "nothing to send".
     // Otherwise, a late typing trigger (e.g. from a tool callback) can outlive the run and

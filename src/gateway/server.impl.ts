@@ -222,6 +222,19 @@ export async function startGatewayServer(
   if (diagnosticsEnabled) {
     startDiagnosticHeartbeat();
   }
+
+  // SaaS mode: initialize database connection for dynamic agents and metering
+  if (process.env.OPENCLAW_SAAS_MODE === "1") {
+    try {
+      const { initDb, runMigrations } = await import("../saas/db/connection.js");
+      initDb();
+      await runMigrations();
+      log.info("gateway: SaaS mode enabled - database connected");
+    } catch (err) {
+      log.error(`gateway: SaaS database init failed: ${String(err)}`);
+    }
+  }
+
   setGatewaySigusr1RestartPolicy({ allowExternal: cfgAtStart.commands?.restart === true });
   initSubagentRegistry();
   const defaultAgentId = resolveDefaultAgentId(cfgAtStart);

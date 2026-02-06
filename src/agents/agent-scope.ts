@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { OpenClawConfig } from "../config/config.js";
@@ -11,6 +12,18 @@ import { resolveUserPath } from "../utils.js";
 import { DEFAULT_AGENT_WORKSPACE_DIR } from "./workspace.js";
 
 export { resolveAgentIdFromSessionKey } from "../routing/session-key.js";
+
+// SaaS dynamic agent support: lazy-imported to avoid circular deps when SaaS mode is off.
+let _listDynamicAgentIds: (() => Promise<string[]>) | undefined;
+
+async function getDynamicAgentIds(): Promise<string[]> {
+  if (process.env.OPENCLAW_SAAS_MODE !== "1") return [];
+  if (!_listDynamicAgentIds) {
+    const mod = await import("../saas/dynamic-agent-resolver.js");
+    _listDynamicAgentIds = mod.listDynamicAgentIds;
+  }
+  return _listDynamicAgentIds();
+}
 
 type AgentEntry = NonNullable<NonNullable<OpenClawConfig["agents"]>["list"]>[number];
 
@@ -164,6 +177,34 @@ export function resolveAgentModelFallbacksOverride(
   return Array.isArray(raw.fallbacks) ? raw.fallbacks : undefined;
 }
 
+/**
+ * Returns static agent IDs merged with dynamic SaaS agent IDs (when OPENCLAW_SAAS_MODE=1).
+ */
+export async function listAgentIdsWithDynamic(cfg: OpenClawConfig): Promise<string[]> {
+  const staticIds = listAgentIds(cfg);
+  const dynamicIds = await getDynamicAgentIds();
+  if (dynamicIds.length === 0) return staticIds;
+  const seen = new Set(staticIds);
+  for (const id of dynamicIds) {
+    if (!seen.has(id)) {
+      seen.add(id);
+      staticIds.push(id);
+    }
+  }
+  return staticIds;
+}
+
+/**
+ * Checks if an agent ID belongs to a dynamic SaaS tenant and ensures its directory exists.
+ */
+function ensureDynamicAgentDir(stateDir: string, agentId: string): string {
+  const agentDir = path.join(stateDir, "agents", agentId, "agent");
+  if (!fs.existsSync(agentDir)) {
+    fs.mkdirSync(agentDir, { recursive: true });
+  }
+  return agentDir;
+}
+
 export function resolveAgentWorkspaceDir(cfg: OpenClawConfig, agentId: string) {
   const id = normalizeAgentId(agentId);
   const configured = resolveAgentConfig(cfg, id)?.workspace?.trim();
@@ -178,6 +219,15 @@ export function resolveAgentWorkspaceDir(cfg: OpenClawConfig, agentId: string) {
     }
     return DEFAULT_AGENT_WORKSPACE_DIR;
   }
+  // SaaS dynamic agents: use state dir workspace
+  if (process.env.OPENCLAW_SAAS_MODE === "1" && id.startsWith("saas-")) {
+    const root = resolveStateDir(process.env, os.homedir);
+    const wsDir = path.join(root, "agents", id, "workspace");
+    if (!fs.existsSync(wsDir)) {
+      fs.mkdirSync(wsDir, { recursive: true });
+    }
+    return wsDir;
+  }
   return path.join(os.homedir(), ".openclaw", `workspace-${id}`);
 }
 
@@ -188,5 +238,9 @@ export function resolveAgentDir(cfg: OpenClawConfig, agentId: string) {
     return resolveUserPath(configured);
   }
   const root = resolveStateDir(process.env, os.homedir);
+  // SaaS dynamic agents: ensure directory exists on-demand
+  if (process.env.OPENCLAW_SAAS_MODE === "1" && id.startsWith("saas-")) {
+    return ensureDynamicAgentDir(root, id);
+  }
   return path.join(root, "agents", id, "agent");
 }

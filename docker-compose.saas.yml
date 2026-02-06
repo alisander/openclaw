@@ -1,0 +1,92 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: openclaw_saas
+      POSTGRES_USER: openclaw
+      POSTGRES_PASSWORD: openclaw
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openclaw -d openclaw_saas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      OPENCLAW_SAAS_MODE: "1"
+      OPENCLAW_SAAS_DATABASE_URL: postgresql://openclaw:openclaw@postgres:5432/openclaw_saas
+      OPENCLAW_GATEWAY_PORT: "18789"
+    ports:
+      - "18789:18789"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - openclaw-state:/root/.openclaw
+
+  saas-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "--import", "tsx", "src/saas/index.ts"]
+    environment:
+      OPENCLAW_SAAS_MODE: "1"
+      OPENCLAW_SAAS_DATABASE_URL: postgresql://openclaw:openclaw@postgres:5432/openclaw_saas
+      OPENCLAW_SAAS_PORT: "3000"
+      OPENCLAW_SAAS_JWT_SECRET: ${OPENCLAW_SAAS_JWT_SECRET:-change-this-in-production}
+      OPENCLAW_SAAS_BASE_URL: ${OPENCLAW_SAAS_BASE_URL:-http://localhost:3001}
+      OPENCLAW_SAAS_CORS_ORIGIN: ${OPENCLAW_SAAS_CORS_ORIGIN:-http://localhost:3001}
+      OPENCLAW_GATEWAY_URL: ws://gateway:18789
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - openclaw-state:/root/.openclaw
+
+  saas-ui:
+    build:
+      context: ./saas-ui
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://saas-api:3000
+    ports:
+      - "3001:3001"
+    depends_on:
+      - saas-api
+
+volumes:
+  pgdata:
+  redisdata:
+  openclaw-state:
