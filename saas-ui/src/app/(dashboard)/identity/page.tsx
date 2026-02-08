@@ -114,9 +114,41 @@ export default function IdentityPage() {
   return (
     <div style={{ maxWidth: "700px" }}>
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem" }}>Agent Identity</h1>
-      <p style={{ color: "#888", marginBottom: "2rem" }}>
+      <p style={{ color: "#888", marginBottom: "1.5rem" }}>
         Customize your assistant&apos;s personality, tone, and behavior.
       </p>
+
+      {/* Instructions */}
+      <div
+        style={{
+          background: "#0d1117",
+          border: "1px solid #1c2333",
+          borderRadius: "0.75rem",
+          padding: "1.25rem",
+          marginBottom: "1.5rem",
+          fontSize: "0.8125rem",
+          color: "#c9d1d9",
+          lineHeight: 1.6,
+        }}
+      >
+        <h4 style={{ fontSize: "0.9375rem", fontWeight: 600, marginBottom: "0.5rem", color: "#fbbf24" }}>
+          Personalizing your assistant
+        </h4>
+        <p style={{ marginBottom: "0.75rem" }}>
+          These settings shape how your assistant communicates. Here is what each field does:
+        </p>
+        <ul style={{ margin: 0, paddingLeft: "1.25rem", color: "#888", marginBottom: "0.75rem" }}>
+          <li><strong style={{ color: "#c9d1d9" }}>Display Name</strong> -- The name shown in chat and notifications. Pick something memorable like &quot;Alex&quot; or &quot;My Work Assistant&quot;.</li>
+          <li><strong style={{ color: "#c9d1d9" }}>Avatar URL</strong> -- A link to an image used as your assistant&apos;s profile picture. Use any publicly accessible image URL.</li>
+          <li><strong style={{ color: "#c9d1d9" }}>Tone</strong> -- Controls the communication style: Professional for work, Casual for everyday use, Technical for developer-focused conversations.</li>
+          <li><strong style={{ color: "#c9d1d9" }}>Language</strong> -- The primary language your assistant will respond in. It can still understand other languages.</li>
+          <li><strong style={{ color: "#c9d1d9" }}>Personality Description</strong> -- A free-text description of how you want your assistant to behave. Be specific about expertise areas and communication preferences.</li>
+          <li><strong style={{ color: "#c9d1d9" }}>System Prompt</strong> -- Advanced: A raw system prompt that gives your assistant precise instructions. This overrides the tone and personality settings when set.</li>
+        </ul>
+        <div style={{ padding: "0.625rem 0.75rem", background: "#1a1500", border: "1px solid #3a2f00", borderRadius: "0.375rem", color: "#fbbf24", fontSize: "0.75rem", lineHeight: 1.5 }}>
+          Tip: Start with just a Display Name, Tone, and Language. You can refine the Personality and System Prompt later as you use your assistant and discover what works best.
+        </div>
+      </div>
 
       {error && (
         <div style={{ background: "#331111", color: "#ff6b6b", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>

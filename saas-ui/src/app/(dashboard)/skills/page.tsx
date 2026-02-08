@@ -79,6 +79,34 @@ export default function SkillsPage() {
         Enable or disable capabilities for your assistant. {enabledCount} of {skills.length} skills enabled.
       </p>
 
+      {/* Instructions */}
+      <div
+        style={{
+          background: "#0d1117",
+          border: "1px solid #1c2333",
+          borderRadius: "0.75rem",
+          padding: "1.25rem",
+          marginBottom: "1.5rem",
+          fontSize: "0.8125rem",
+          color: "#c9d1d9",
+          lineHeight: 1.6,
+        }}
+      >
+        <h4 style={{ fontSize: "0.9375rem", fontWeight: 600, marginBottom: "0.5rem", color: "#fbbf24" }}>
+          How skills work
+        </h4>
+        <p style={{ marginBottom: "0.5rem" }}>
+          Skills are capabilities your assistant can use when responding to your messages.
+          Toggle them on or off depending on what you need.
+        </p>
+        <ul style={{ margin: 0, paddingLeft: "1.25rem", color: "#888" }}>
+          <li><strong style={{ color: "#c9d1d9" }}>Core skills</strong> -- Memory, summarization, and translation are always useful to keep enabled.</li>
+          <li><strong style={{ color: "#c9d1d9" }}>Research skills</strong> -- Web search and browsing let your assistant find up-to-date information.</li>
+          <li><strong style={{ color: "#c9d1d9" }}>Integration skills</strong> -- Google Drive, OneDrive, etc. require connecting the service first (see Integrations page).</li>
+          <li><strong style={{ color: "#c9d1d9" }}>Communication skills</strong> -- Email read/send require either an integration or the Email channel configured.</li>
+        </ul>
+      </div>
+
       {error && (
         <div style={{ background: "#331111", color: "#ff6b6b", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
           {error}

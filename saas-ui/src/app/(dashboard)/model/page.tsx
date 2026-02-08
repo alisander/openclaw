@@ -84,9 +84,40 @@ export default function ModelPage() {
   return (
     <div>
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem" }}>Model Selection</h1>
-      <p style={{ color: "#888", marginBottom: "2rem" }}>
+      <p style={{ color: "#888", marginBottom: "1.5rem" }}>
         Choose the default AI model for your assistant. Model availability depends on your plan.
       </p>
+
+      {/* Instructions */}
+      <div
+        style={{
+          background: "#0d1117",
+          border: "1px solid #1c2333",
+          borderRadius: "0.75rem",
+          padding: "1.25rem",
+          marginBottom: "1.5rem",
+          fontSize: "0.8125rem",
+          color: "#c9d1d9",
+          lineHeight: 1.6,
+        }}
+      >
+        <h4 style={{ fontSize: "0.9375rem", fontWeight: 600, marginBottom: "0.5rem", color: "#fbbf24" }}>
+          Choosing the right model
+        </h4>
+        <p style={{ marginBottom: "0.75rem" }}>
+          Different models offer different trade-offs between speed, quality, and cost. Here is a quick guide:
+        </p>
+        <ul style={{ margin: 0, paddingLeft: "1.25rem", color: "#888", marginBottom: "0.75rem" }}>
+          <li><strong style={{ color: "#d4a574" }}>Anthropic (Claude)</strong> -- Excellent reasoning and safety. Claude Sonnet is a great all-rounder; Claude Opus is best for complex tasks; Haiku is fast and cheap for simple queries.</li>
+          <li><strong style={{ color: "#74b9ff" }}>OpenAI (GPT)</strong> -- Strong general-purpose models. GPT-4o is versatile and fast; GPT-4 Turbo is powerful for detailed work; GPT-4o Mini is budget-friendly.</li>
+          <li><strong style={{ color: "#81ecec" }}>Google (Gemini)</strong> -- Good for multimodal tasks and long context. Gemini Pro is solid for most tasks; Gemini Flash is optimized for speed.</li>
+          <li><strong style={{ color: "#a29bfe" }}>DeepSeek</strong> -- Competitive performance at lower cost. Great value for coding and reasoning tasks.</li>
+          <li><strong style={{ color: "#fab1a0" }}>Meta (Llama)</strong> -- Open-source models. Good performance at competitive pricing.</li>
+        </ul>
+        <div style={{ padding: "0.625rem 0.75rem", background: "#1a1500", border: "1px solid #3a2f00", borderRadius: "0.375rem", color: "#fbbf24", fontSize: "0.75rem", lineHeight: 1.5 }}>
+          Tip: Higher-tier plans unlock more powerful models and offer lower token margins. You can change your model at any time -- it takes effect on the next message.
+        </div>
+      </div>
 
       {error && (
         <div style={{ background: "#331111", color: "#ff6b6b", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
