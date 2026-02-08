@@ -28,7 +28,7 @@ export default function LoginPage() {
       });
       setTokens(data.accessToken, data.refreshToken);
       setUserInfo({ role: data.user.role, email: data.user.email, name: data.user.name ?? undefined });
-      router.push(data.user.role === "admin" ? "/admin" : "/chat");
+      router.push(data.user.role === "admin" ? "/admin" : "/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

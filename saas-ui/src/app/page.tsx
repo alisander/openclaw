@@ -1,6 +1,24 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { isAuthenticated } from "@/lib/api";
 
 export default function LandingPage() {
+  const router = useRouter();
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.replace("/dashboard");
+      return;
+    }
+    setChecked(true);
+  }, [router]);
+
+  if (!checked) return null;
+
   return (
     <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#fafafa" }}>
       {/* Header */}

@@ -29,7 +29,8 @@ export default function SignupPage() {
       });
       setTokens(data.accessToken, data.refreshToken);
       setUserInfo({ role: data.user.role, email: data.user.email, name: data.user.name ?? undefined });
-      router.push("/chat");
+      localStorage.setItem("openclaw_just_signed_up", "1");
+      router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed");
     } finally {

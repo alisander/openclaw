@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { isAuthenticated, clearTokens, getUserRole } from "@/lib/api";
 
 const USER_NAV = [
-  { href: "/", label: "Overview", icon: "~" },
+  { href: "/dashboard", label: "Overview", icon: "~" },
   { href: "/chat", label: "Chat", icon: ">" },
   { href: "/channels", label: "Channels", icon: "#" },
   { href: "/skills", label: "Skills", icon: "*" },
@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isAdminPage = pathname.startsWith("/admin");
 
   const linkStyle = (href: string) => {
-    const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
+    const active = pathname === href || pathname.startsWith(href + "/");
     return {
       display: "flex",
       alignItems: "center",
@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           flexShrink: 0,
         }}
       >
-        <Link href="/" style={{ textDecoration: "none", color: "inherit" }}>
+        <Link href="/dashboard" style={{ textDecoration: "none", color: "inherit" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.5rem", padding: "0.5rem" }}>
             OpenClaw
           </h2>
