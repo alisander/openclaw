@@ -5,7 +5,7 @@ import { initDb, runMigrations, closeDb } from "./db/connection.js";
 const DEFAULT_PORT = 3000;
 
 export async function startSaasServer(port?: number): Promise<{ close: () => Promise<void> }> {
-  const resolvedPort = port ?? Number(process.env.OPENCLAW_SAAS_PORT) || DEFAULT_PORT;
+  const resolvedPort = port ?? (Number(process.env.OPENCLAW_SAAS_PORT) || DEFAULT_PORT);
 
   // Initialize database
   console.log("[saas] Connecting to PostgreSQL...");

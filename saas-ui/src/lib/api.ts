@@ -24,10 +24,28 @@ export function setTokens(accessToken: string, refreshToken: string): void {
 export function clearTokens(): void {
   localStorage.removeItem("openclaw_token");
   localStorage.removeItem("openclaw_refresh_token");
+  clearUserInfo();
 }
 
 export function isAuthenticated(): boolean {
   return !!getToken();
+}
+
+export function getUserRole(): string {
+  if (typeof window === "undefined") return "user";
+  return localStorage.getItem("openclaw_user_role") ?? "user";
+}
+
+export function setUserInfo(info: { role?: string; email?: string; name?: string }): void {
+  if (info.role) localStorage.setItem("openclaw_user_role", info.role);
+  if (info.email) localStorage.setItem("openclaw_user_email", info.email);
+  if (info.name) localStorage.setItem("openclaw_user_name", info.name);
+}
+
+export function clearUserInfo(): void {
+  localStorage.removeItem("openclaw_user_role");
+  localStorage.removeItem("openclaw_user_email");
+  localStorage.removeItem("openclaw_user_name");
 }
 
 async function refreshAccessToken(): Promise<string | null> {

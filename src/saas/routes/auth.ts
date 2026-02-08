@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { queryOne, query } from "../db/connection.js";
 import { signToken, signRefreshToken, verifyRefreshToken, type JwtPayload } from "../middleware/auth.js";
@@ -33,10 +33,10 @@ auth.post("/signup", async (c) => {
 
   // Create user
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  const user = await queryOne<{ id: string; email: string; name: string | null }>(
+  const user = await queryOne<{ id: string; email: string; name: string | null; role: string }>(
     `INSERT INTO users (email, password_hash, name)
      VALUES ($1, $2, $3)
-     RETURNING id, email, name`,
+     RETURNING id, email, name, COALESCE(role, 'user') as role`,
     [email, passwordHash, name ?? null],
   );
   if (!user) {
@@ -66,12 +66,13 @@ auth.post("/signup", async (c) => {
     tenantId: tenant.id,
     agentId: tenant.agent_id,
     plan: tenant.plan,
+    role: user.role as "user" | "admin",
   };
   const accessToken = await signToken(jwtPayload);
   const refreshToken = await signRefreshToken(user.id);
 
   return c.json({
-    user: { id: user.id, email: user.email, name: user.name },
+    user: { id: user.id, email: user.email, name: user.name, role: user.role },
     tenant: { id: tenant.id, agentId: tenant.agent_id, plan: tenant.plan },
     accessToken,
     refreshToken,
@@ -93,7 +94,8 @@ auth.post("/login", async (c) => {
     password_hash: string;
     name: string | null;
     status: string;
-  }>("SELECT id, email, password_hash, name, status FROM users WHERE email = $1", [email]);
+    role: string;
+  }>("SELECT id, email, password_hash, name, status, COALESCE(role, 'user') as role FROM users WHERE email = $1", [email]);
 
   if (!user) {
     return c.json({ error: "Invalid email or password" }, 401);
@@ -119,12 +121,13 @@ auth.post("/login", async (c) => {
     tenantId: tenant.id,
     agentId: tenant.agent_id,
     plan: tenant.plan,
+    role: user.role as "user" | "admin",
   };
   const accessToken = await signToken(jwtPayload);
   const refreshToken = await signRefreshToken(user.id);
 
   return c.json({
-    user: { id: user.id, email: user.email, name: user.name },
+    user: { id: user.id, email: user.email, name: user.name, role: user.role },
     tenant: { id: tenant.id, agentId: tenant.agent_id, plan: tenant.plan },
     accessToken,
     refreshToken,
@@ -140,8 +143,8 @@ auth.post("/refresh", async (c) => {
   try {
     const userId = await verifyRefreshToken(body.refreshToken);
 
-    const user = await queryOne<{ id: string; email: string; name: string | null; status: string }>(
-      "SELECT id, email, name, status FROM users WHERE id = $1",
+    const user = await queryOne<{ id: string; email: string; name: string | null; status: string; role: string }>(
+      "SELECT id, email, name, status, COALESCE(role, 'user') as role FROM users WHERE id = $1",
       [userId],
     );
     if (!user || user.status !== "active") {
@@ -159,6 +162,7 @@ auth.post("/refresh", async (c) => {
       tenantId: tenant.id,
       agentId: tenant.agent_id,
       plan: tenant.plan,
+      role: user.role as "user" | "admin",
     };
     const accessToken = await signToken(jwtPayload);
     const newRefreshToken = await signRefreshToken(user.id);

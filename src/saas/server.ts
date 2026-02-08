@@ -7,6 +7,7 @@ import { dashboard } from "./routes/dashboard.js";
 import { integrations } from "./routes/integrations.js";
 import { assistant } from "./routes/assistant.js";
 import { admin } from "./routes/admin.js";
+import { config } from "./routes/config.js";
 import { rateLimitMiddleware } from "./middleware/rate-limit.js";
 
 export function createSaasApp(): Hono {
@@ -42,6 +43,9 @@ export function createSaasApp(): Hono {
 
   app.use("/api/assistant/*", rateLimitMiddleware());
   app.route("/api/assistant", assistant);
+
+  app.use("/api/config/*", rateLimitMiddleware());
+  app.route("/api/config", config);
 
   app.use("/api/admin/*", rateLimitMiddleware());
   app.route("/api/admin", admin);

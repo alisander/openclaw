@@ -29,6 +29,12 @@ RUN OPENCLAW_A2UI_SKIP_MISSING=1 pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:build
 
+# Copy SaaS migration files next to compiled output (read at runtime)
+RUN if [ -d src/saas/db/migrations ]; then \
+      mkdir -p dist/saas/db/migrations && \
+      cp src/saas/db/migrations/*.sql dist/saas/db/migrations/; \
+    fi
+
 ENV NODE_ENV=production
 
 # Allow non-root user to write temp files during runtime/tests.

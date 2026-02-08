@@ -31,4 +31,11 @@ export default defineConfig([
     fixedExtension: false,
     platform: "node",
   },
+  {
+    entry: "src/saas/index.ts",
+    outDir: "dist/saas",
+    env,
+    fixedExtension: false,
+    platform: "node",
+  },
 ]);

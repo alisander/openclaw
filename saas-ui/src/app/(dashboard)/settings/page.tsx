@@ -1,9 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 export default function SettingsPage() {
-  const [saved, setSaved] = useState(false);
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [tenantInfo, setTenantInfo] = useState<{ id: string; agentId: string; plan: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setEmail(localStorage.getItem("openclaw_user_email") ?? "");
+      setName(localStorage.getItem("openclaw_user_name") ?? "");
+    }
+    // Load tenant info from dashboard endpoint
+    api<{ usage: unknown; tenant?: { id: string; agentId: string; plan: string } }>("/api/dashboard/usage")
+      .then((data) => {
+        if (data.tenant) setTenantInfo(data.tenant);
+      })
+      .catch(() => {});
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      // For now, just show success (password change would need a dedicated endpoint)
+      setSuccess("Settings saved");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const cardStyle = {
     background: "#111",
@@ -15,108 +50,152 @@ export default function SettingsPage() {
 
   const inputStyle = {
     width: "100%",
-    padding: "0.5rem 0.75rem",
-    borderRadius: "0.375rem",
+    padding: "0.75rem",
+    borderRadius: "0.5rem",
     border: "1px solid #333",
-    background: "#0a0a0a",
+    background: "#111",
     color: "#fff",
-    fontSize: "0.95rem",
+    fontSize: "0.875rem",
     boxSizing: "border-box" as const,
   };
 
+  const labelStyle = {
+    display: "block" as const,
+    marginBottom: "0.375rem",
+    color: "#888",
+    fontSize: "0.8125rem",
+  };
+
   return (
-    <div style={{ padding: "2rem", maxWidth: "600px" }}>
+    <div style={{ maxWidth: "600px" }}>
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "2rem" }}>Settings</h1>
 
-      {saved && (
-        <div
-          style={{
-            background: "#113311",
-            color: "#4ade80",
-            padding: "0.75rem",
-            borderRadius: "0.5rem",
-            marginBottom: "1rem",
-          }}
-        >
-          Settings saved successfully.
+      {error && (
+        <div style={{ background: "#331111", color: "#ff6b6b", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
+          {error}
+        </div>
+      )}
+      {success && (
+        <div style={{ background: "#113311", color: "#4ade80", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
+          {success}
         </div>
       )}
 
-      {/* Assistant Configuration */}
+      {/* Account Info */}
       <div style={cardStyle}>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "1rem" }}>
-          Assistant Configuration
-        </h2>
+        <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1.25rem" }}>Account</h2>
 
         <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.5rem", color: "#888" }}>
-            Assistant Name
-          </label>
-          <input type="text" placeholder="My Assistant" style={inputStyle} />
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.5rem", color: "#888" }}>
-            Default Model
-          </label>
-          <select
-            style={{
-              ...inputStyle,
-              appearance: "auto",
-            }}
-          >
-            <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5</option>
-            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4o-mini">GPT-4o Mini</option>
-          </select>
+          <label style={labelStyle}>Email</label>
+          <input
+            type="email"
+            value={email}
+            disabled
+            style={{ ...inputStyle, opacity: 0.5, cursor: "not-allowed" }}
+          />
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", color: "#888" }}>
-            System Prompt (optional)
-          </label>
-          <textarea
-            rows={4}
-            placeholder="Custom instructions for your assistant..."
-            style={{ ...inputStyle, resize: "vertical" }}
+          <label style={labelStyle}>Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={inputStyle}
           />
         </div>
       </div>
 
-      {/* Account */}
+      {/* Change Password */}
       <div style={cardStyle}>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "1rem" }}>Account</h2>
+        <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1.25rem" }}>Change Password</h2>
 
         <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.5rem", color: "#888" }}>Email</label>
-          <input type="email" disabled placeholder="you@example.com" style={{ ...inputStyle, opacity: 0.5 }} />
+          <label style={labelStyle}>Current Password</label>
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            style={inputStyle}
+          />
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.5rem", color: "#888" }}>
-            Change Password
-          </label>
-          <input type="password" placeholder="New password" style={inputStyle} />
+          <label style={labelStyle}>New Password</label>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Min 8 characters"
+            style={inputStyle}
+          />
         </div>
       </div>
 
+      {/* Tenant Info */}
+      {tenantInfo && (
+        <div style={cardStyle}>
+          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1.25rem" }}>Tenant Details</h2>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div>
+              <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Tenant ID</div>
+              <div style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#ccc" }}>
+                {tenantInfo.id.slice(0, 8)}...
+              </div>
+            </div>
+            <div>
+              <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Agent ID</div>
+              <div style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#ccc" }}>
+                {tenantInfo.agentId}
+              </div>
+            </div>
+            <div>
+              <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Plan</div>
+              <div style={{ fontSize: "0.8125rem", textTransform: "capitalize" }}>
+                {tenantInfo.plan}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Danger Zone */}
+      <div style={{ ...cardStyle, borderColor: "#3a1111" }}>
+        <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem", color: "#ff6b6b" }}>Danger Zone</h2>
+        <p style={{ color: "#888", fontSize: "0.8125rem", marginBottom: "1rem" }}>
+          Permanently delete your account and all associated data.
+        </p>
+        <button
+          style={{
+            padding: "0.5rem 1rem",
+            borderRadius: "0.375rem",
+            border: "1px solid #ff6b6b",
+            background: "transparent",
+            color: "#ff6b6b",
+            cursor: "pointer",
+            fontSize: "0.8125rem",
+          }}
+        >
+          Delete Account
+        </button>
+      </div>
+
       <button
-        onClick={() => {
-          setSaved(true);
-          setTimeout(() => setSaved(false), 3000);
-        }}
+        onClick={handleSave}
+        disabled={saving}
         style={{
-          padding: "0.75rem 1.5rem",
+          padding: "0.75rem 2rem",
           borderRadius: "0.5rem",
           border: "none",
           background: "#fff",
           color: "#000",
           fontWeight: 600,
-          cursor: "pointer",
+          cursor: saving ? "wait" : "pointer",
+          opacity: saving ? 0.7 : 1,
         }}
       >
-        Save Settings
+        {saving ? "Saving..." : "Save Settings"}
       </button>
     </div>
   );

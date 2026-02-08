@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { api, setTokens } from "@/lib/api";
+import { api, setTokens, setUserInfo } from "@/lib/api";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -22,11 +22,13 @@ export default function SignupPage() {
       const data = await api<{
         accessToken: string;
         refreshToken: string;
+        user: { id: string; email: string; name: string | null; role: string };
       }>("/api/auth/signup", {
         method: "POST",
         body: { name, email, password },
       });
       setTokens(data.accessToken, data.refreshToken);
+      setUserInfo({ role: data.user.role, email: data.user.email, name: data.user.name ?? undefined });
       router.push("/chat");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed");

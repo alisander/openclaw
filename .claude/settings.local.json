@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)",
+      "Bash(set OPENCLAW_SAAS_DATABASE_URL=postgresql://openclaw:openclaw@localhost:5432/openclaw_saas:*)",
+      "Bash(node --import tsx:*)",
+      "Bash(set:*)",
+      "Bash(set OPENCLAW_SAAS_JWT_SECRET=dev-secret)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "Bash(curl:*)",
+      "Bash(OPENCLAW_SAAS_DATABASE_URL=postgresql://openclaw:openclaw@localhost:5432/openclaw_saas node:*)",
+      "Bash(docker stop:*)",
+      "Bash(npm install:*)",
+      "Bash(NEXT_PUBLIC_API_URL=http://localhost:3000 npm run dev:*)",
+      "Bash(del \"\\\\?\\\\C:\\\\GitHub\\\\openclaw\\\\openclaw\\\\nul\")"
+    ]
+  }
+}
