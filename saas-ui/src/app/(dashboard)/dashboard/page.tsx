@@ -3,6 +3,34 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import {
+  CreditCard,
+  Crown,
+  Activity,
+  DollarSign,
+  MessageSquare,
+  Hash,
+  Sparkles,
+  Cpu,
+  UserCircle,
+  Plug,
+  X,
+  ChevronRight,
+  BookOpen,
+  Check,
+} from "lucide-react";
 
 type SetupStep = {
   id: string;
@@ -35,43 +63,49 @@ const QUICK_ACTIONS = [
     title: "Chat",
     description: "Talk to your AI assistant",
     href: "/chat",
-    icon: ">",
-    color: "#4ade80",
+    icon: MessageSquare,
+    color: "text-emerald-400",
+    bg: "bg-emerald-400/10",
   },
   {
     title: "Channels",
     description: "Connect Telegram, WhatsApp, Discord...",
     href: "/channels",
-    icon: "#",
-    color: "#74b9ff",
+    icon: Hash,
+    color: "text-orange-400",
+    bg: "bg-orange-400/10",
   },
   {
     title: "Skills",
     description: "Manage assistant capabilities",
     href: "/skills",
-    icon: "*",
-    color: "#fbbf24",
+    icon: Sparkles,
+    color: "text-amber-300",
+    bg: "bg-amber-300/10",
   },
   {
     title: "Model",
     description: "Choose your AI model",
     href: "/model",
-    icon: "M",
-    color: "#a29bfe",
+    icon: Cpu,
+    color: "text-amber-300",
+    bg: "bg-amber-300/10",
   },
   {
     title: "Identity",
     description: "Customize personality and tone",
     href: "/identity",
-    icon: "@",
-    color: "#fd79a8",
+    icon: UserCircle,
+    color: "text-pink-400",
+    bg: "bg-pink-400/10",
   },
   {
     title: "Integrations",
     description: "Connect Google, Microsoft...",
     href: "/integrations",
-    icon: "+",
-    color: "#81ecec",
+    icon: Plug,
+    color: "text-emerald-400",
+    bg: "bg-emerald-400/10",
   },
 ];
 
@@ -106,13 +140,6 @@ export default function DashboardPage() {
     ? localStorage.getItem("openclaw_user_name") || "there"
     : "there";
 
-  const cardStyle = {
-    background: "#111",
-    border: "1px solid #222",
-    borderRadius: "0.75rem",
-    padding: "1.5rem",
-  };
-
   const showWelcome = (justSignedUp || (setup?.isNewUser && !welcomeDismissed));
   const incompleteSteps = setup?.steps.filter((s) => !s.completed && s.id !== "chat") ?? [];
 
@@ -120,277 +147,227 @@ export default function DashboardPage() {
     <div>
       {/* Welcome Banner for new users */}
       {showWelcome && (
-        <div
-          style={{
-            background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
-            border: "1px solid #2a3a5e",
-            borderRadius: "0.75rem",
-            padding: "2rem",
-            marginBottom: "2rem",
-            position: "relative",
-          }}
-        >
-          <button
-            onClick={() => { setWelcomeDismissed(true); setJustSignedUp(false); }}
-            style={{
-              position: "absolute",
-              top: "1rem",
-              right: "1rem",
-              background: "transparent",
-              border: "none",
-              color: "#666",
-              cursor: "pointer",
-              fontSize: "1.25rem",
-              lineHeight: 1,
-            }}
-          >
-            x
-          </button>
+        <Card className="mb-8 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20 relative">
+          <CardHeader>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+              onClick={() => { setWelcomeDismissed(true); setJustSignedUp(false); }}
+            >
+              <X className="size-4" />
+            </Button>
 
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-            Welcome to OpenClaw{userName !== "there" ? `, ${userName}` : ""}!
-          </h1>
-          <p style={{ color: "#a0aec0", marginBottom: "1.5rem", maxWidth: "600px", lineHeight: 1.6 }}>
-            Your AI assistant is ready. Let&apos;s get it set up in a few quick steps.
-            Configure your assistant&apos;s identity, choose an AI model, and connect
-            your favorite messaging channels.
-          </p>
+            <CardTitle className="text-2xl font-bold">
+              Welcome to OpenClaw{userName !== "there" ? `, ${userName}` : ""}!
+            </CardTitle>
+            <CardDescription className="max-w-[600px] leading-relaxed">
+              Your AI assistant is ready. Let&apos;s get it set up in a few quick steps.
+              Configure your assistant&apos;s identity, choose an AI model, and connect
+              your favorite messaging channels.
+            </CardDescription>
+          </CardHeader>
 
-          {/* Setup Steps */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <CardContent className="flex flex-col gap-2">
+            {/* Setup Steps */}
             {setup?.steps.map((step, i) => (
               <Link
                 key={step.id}
                 href={step.href}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  padding: "0.75rem 1rem",
-                  borderRadius: "0.5rem",
-                  background: step.completed ? "rgba(74, 222, 128, 0.08)" : "rgba(255, 255, 255, 0.04)",
-                  border: `1px solid ${step.completed ? "rgba(74, 222, 128, 0.2)" : "rgba(255, 255, 255, 0.08)"}`,
-                  textDecoration: "none",
-                  color: "inherit",
-                  transition: "background 0.15s",
-                }}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-lg no-underline text-inherit transition-colors",
+                  step.completed
+                    ? "bg-emerald-400/[0.08] border border-emerald-400/20"
+                    : "bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08]"
+                )}
               >
                 {/* Step number / check */}
                 <div
-                  style={{
-                    width: "1.75rem",
-                    height: "1.75rem",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    flexShrink: 0,
-                    background: step.completed ? "#4ade80" : "#333",
-                    color: step.completed ? "#000" : "#888",
-                  }}
+                  className={cn(
+                    "size-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
+                    step.completed
+                      ? "bg-emerald-400 text-black"
+                      : "bg-white/15 text-muted-foreground"
+                  )}
                 >
-                  {step.completed ? "ok" : i + 1}
+                  {step.completed ? <Check className="size-3.5" /> : i + 1}
                 </div>
 
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontWeight: 600,
-                    fontSize: "0.875rem",
-                    color: step.completed ? "#4ade80" : "#fff",
-                    textDecoration: step.completed ? "line-through" : "none",
-                    opacity: step.completed ? 0.7 : 1,
-                  }}>
+                <div className="flex-1">
+                  <div
+                    className={cn(
+                      "font-semibold text-sm",
+                      step.completed
+                        ? "text-emerald-400 line-through opacity-70"
+                        : "text-foreground"
+                    )}
+                  >
                     {step.title}
                   </div>
-                  <div style={{ color: "#888", fontSize: "0.75rem" }}>
+                  <div className="text-muted-foreground text-xs">
                     {step.description}
                   </div>
                 </div>
 
-                <div style={{ color: "#555", fontSize: "0.875rem" }}>
-                  {step.completed ? "" : "->"}
-                </div>
+                {!step.completed && (
+                  <ChevronRight className="size-4 text-muted-foreground" />
+                )}
               </Link>
             ))}
-          </div>
+          </CardContent>
 
           {/* Progress bar */}
           {setup && (
-            <div style={{ marginTop: "1.25rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                <span style={{ color: "#888", fontSize: "0.75rem" }}>Setup progress</span>
-                <span style={{ color: "#888", fontSize: "0.75rem" }}>
+            <CardFooter className="flex-col items-stretch gap-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-xs">Setup progress</span>
+                <span className="text-muted-foreground text-xs">
                   {setup.completedCount} / {setup.totalSteps}
                 </span>
               </div>
-              <div style={{ background: "#222", borderRadius: "1rem", height: "6px", overflow: "hidden" }}>
-                <div
-                  style={{
-                    width: `${(setup.completedCount / setup.totalSteps) * 100}%`,
-                    height: "100%",
-                    background: "#4ade80",
-                    borderRadius: "1rem",
-                    transition: "width 0.5s ease",
-                  }}
-                />
-              </div>
-            </div>
+              <Progress value={(setup.completedCount / setup.totalSteps) * 100} />
+            </CardFooter>
           )}
-        </div>
+        </Card>
       )}
 
       {/* Regular dashboard header when welcome is dismissed */}
       {!showWelcome && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Dashboard</h1>
-          <button
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => { setWelcomeDismissed(false); setJustSignedUp(true); }}
-            style={{
-              padding: "0.5rem 0.875rem",
-              borderRadius: "0.375rem",
-              border: "1px solid #333",
-              background: "transparent",
-              color: "#888",
-              cursor: "pointer",
-              fontSize: "0.8125rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.375rem",
-            }}
           >
+            <BookOpen className="size-4" />
             Setup Guide
-          </button>
+          </Button>
         </div>
       )}
 
-      {error && <p style={{ color: "#ff6b6b", marginBottom: "1rem" }}>{error}</p>}
+      {error && <p className="text-destructive mb-4">{error}</p>}
 
       {/* Pending setup steps reminder (when welcome is dismissed but steps remain) */}
       {!showWelcome && incompleteSteps.length > 0 && (
-        <div
-          style={{
-            ...cardStyle,
-            marginBottom: "1.5rem",
-            borderColor: "#2a3a5e",
-            background: "#111827",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-            <h3 style={{ fontSize: "0.9375rem", fontWeight: 600 }}>
-              Finish setting up your assistant
-            </h3>
-            <span style={{ color: "#888", fontSize: "0.75rem" }}>
-              {setup?.completedCount} / {setup?.totalSteps} complete
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            {incompleteSteps.map((step) => (
-              <Link
-                key={step.id}
-                href={step.href}
-                style={{
-                  padding: "0.375rem 0.75rem",
-                  borderRadius: "1rem",
-                  border: "1px solid #333",
-                  background: "transparent",
-                  color: "#fff",
-                  textDecoration: "none",
-                  fontSize: "0.8125rem",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.375rem",
-                }}
-              >
-                {step.title} <span style={{ color: "#555" }}>-&gt;</span>
-              </Link>
-            ))}
-          </div>
-        </div>
+        <Card className="mb-6 bg-muted/50">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-[0.9375rem]">
+                Finish setting up your assistant
+              </CardTitle>
+              <span className="text-muted-foreground text-xs">
+                {setup?.completedCount} / {setup?.totalSteps} complete
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 flex-wrap">
+              {incompleteSteps.map((step) => (
+                <Badge key={step.id} variant="outline" asChild>
+                  <Link href={step.href} className="no-underline gap-1.5">
+                    {step.title}
+                    <ChevronRight className="size-3 text-muted-foreground" />
+                  </Link>
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Stats Cards */}
       {stats && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", marginBottom: "2rem" }}>
-          <div style={cardStyle}>
-            <div style={{ color: "#888", fontSize: "0.8125rem", marginBottom: "0.375rem" }}>Credit Balance</div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>${stats.balance.toFixed(2)}</div>
-            <Link href="/billing" style={{ color: "#888", fontSize: "0.75rem", textDecoration: "none" }}>
-              Manage billing -&gt;
-            </Link>
-          </div>
-          <div style={cardStyle}>
-            <div style={{ color: "#888", fontSize: "0.8125rem", marginBottom: "0.375rem" }}>Plan</div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 700, textTransform: "capitalize" }}>{stats.plan}</div>
-            <Link href="/billing" style={{ color: "#888", fontSize: "0.75rem", textDecoration: "none" }}>
-              Upgrade -&gt;
-            </Link>
-          </div>
-          <div style={cardStyle}>
-            <div style={{ color: "#888", fontSize: "0.8125rem", marginBottom: "0.375rem" }}>Tokens (30d)</div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>
-              {(stats.usage.totalInputTokens + stats.usage.totalOutputTokens).toLocaleString()}
-            </div>
-            <span style={{ color: "#666", fontSize: "0.75rem" }}>
-              {stats.usage.eventCount} requests
-            </span>
-          </div>
-          <div style={cardStyle}>
-            <div style={{ color: "#888", fontSize: "0.8125rem", marginBottom: "0.375rem" }}>Cost (30d)</div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>${stats.usage.totalCostUsd.toFixed(4)}</div>
-            <span style={{ color: "#666", fontSize: "0.75rem" }}>
-              avg ${stats.usage.eventCount > 0 ? (stats.usage.totalCostUsd / stats.usage.eventCount).toFixed(4) : "0.00"}/req
-            </span>
-          </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardDescription>Credit Balance</CardDescription>
+                <CreditCard className="size-4 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.balance.toFixed(2)}</div>
+              <Link href="/billing" className="text-xs text-muted-foreground hover:text-foreground transition-colors no-underline">
+                Manage billing &rarr;
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardDescription>Plan</CardDescription>
+                <Crown className="size-4 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold capitalize">{stats.plan}</div>
+              <Link href="/billing" className="text-xs text-muted-foreground hover:text-foreground transition-colors no-underline">
+                Upgrade &rarr;
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardDescription>Tokens (30d)</CardDescription>
+                <Activity className="size-4 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {(stats.usage.totalInputTokens + stats.usage.totalOutputTokens).toLocaleString()}
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {stats.usage.eventCount} requests
+              </span>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardDescription>Cost (30d)</CardDescription>
+                <DollarSign className="size-4 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.usage.totalCostUsd.toFixed(4)}</div>
+              <span className="text-xs text-muted-foreground">
+                avg ${stats.usage.eventCount > 0 ? (stats.usage.totalCostUsd / stats.usage.eventCount).toFixed(4) : "0.00"}/req
+              </span>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* Quick Actions */}
-      <h2 style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: "1rem" }}>Quick Actions</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
-        {QUICK_ACTIONS.map((action) => (
-          <Link
-            key={action.href}
-            href={action.href}
-            style={{
-              ...cardStyle,
-              textDecoration: "none",
-              color: "inherit",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "0.75rem",
-              transition: "border-color 0.15s",
-            }}
-          >
-            <div
-              style={{
-                width: "2.25rem",
-                height: "2.25rem",
-                borderRadius: "0.5rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: `${action.color}15`,
-                color: action.color,
-                fontFamily: "monospace",
-                fontWeight: 700,
-                fontSize: "1rem",
-                flexShrink: 0,
-              }}
-            >
-              {action.icon}
-            </div>
-            <div>
-              <div style={{ fontWeight: 600, fontSize: "0.9375rem", marginBottom: "0.125rem" }}>
-                {action.title}
-              </div>
-              <div style={{ color: "#888", fontSize: "0.75rem" }}>
-                {action.description}
-              </div>
-            </div>
-          </Link>
-        ))}
+      <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {QUICK_ACTIONS.map((action) => {
+          const Icon = action.icon;
+          return (
+            <Link key={action.href} href={action.href} className="no-underline text-inherit">
+              <Card className="transition-colors hover:border-foreground/25 cursor-pointer">
+                <CardContent className="flex items-start gap-3">
+                  <div className={cn("size-9 rounded-lg flex items-center justify-center shrink-0", action.bg)}>
+                    <Icon className={cn("size-5", action.color)} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[0.9375rem] mb-0.5">
+                      {action.title}
+                    </div>
+                    <div className="text-muted-foreground text-xs">
+                      {action.description}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

@@ -8,7 +8,9 @@ import {
   exchangeMicrosoftCode,
   saveIntegration,
   listIntegrations,
+  getIntegration,
   disconnectIntegration,
+  getValidAccessToken,
   type IntegrationProvider,
 } from "../services/integration-oauth.js";
 
@@ -125,6 +127,53 @@ integrations.get("/callback/microsoft", async (c) => {
   } catch (err) {
     console.error("[saas-integrations] Microsoft callback error:", err);
     return c.redirect(`${baseUrl}/dashboard/integrations?error=microsoft`);
+  }
+});
+
+// Get detailed status for a specific integration (includes token health)
+integrations.get("/status/:provider", async (c) => {
+  const tenant = c.get("tenant") as TenantContext;
+  const provider = c.req.param("provider") as IntegrationProvider;
+  if (!["google", "microsoft"].includes(provider)) {
+    return c.json({ error: "Invalid provider" }, 400);
+  }
+
+  const integration = await getIntegration(tenant.tenantId, provider);
+  if (!integration || integration.status !== "active") {
+    return c.json({ connected: false, provider });
+  }
+
+  const expiresAt = integration.expires_at ? new Date(integration.expires_at) : null;
+  const isExpired = expiresAt ? Date.now() > expiresAt.getTime() : true;
+  const expiresInMs = expiresAt ? expiresAt.getTime() - Date.now() : 0;
+
+  return c.json({
+    connected: true,
+    provider,
+    email: integration.email,
+    tokenStatus: isExpired ? "expired" : "valid",
+    expiresAt: expiresAt?.toISOString() ?? null,
+    expiresInMinutes: Math.max(0, Math.floor(expiresInMs / 60000)),
+    hasRefreshToken: !!integration.refresh_token,
+  });
+});
+
+// Refresh an integration's access token
+integrations.post("/refresh/:provider", async (c) => {
+  const tenant = c.get("tenant") as TenantContext;
+  const provider = c.req.param("provider") as IntegrationProvider;
+  if (!["google", "microsoft"].includes(provider)) {
+    return c.json({ error: "Invalid provider" }, 400);
+  }
+
+  try {
+    await getValidAccessToken(tenant.tenantId, provider);
+    return c.json({ success: true, message: `${provider} token refreshed` });
+  } catch (err) {
+    return c.json(
+      { error: err instanceof Error ? err.message : `Failed to refresh ${provider} token` },
+      400,
+    );
   }
 });
 

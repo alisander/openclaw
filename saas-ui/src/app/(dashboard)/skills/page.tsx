@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
+import { AlertCircle, Info, Lightbulb } from "lucide-react";
 
 type Skill = {
   id: string;
@@ -62,122 +69,88 @@ export default function SkillsPage() {
   const filtered = filter === "all" ? skills : skills.filter((s) => s.category === filter);
   const enabledCount = skills.filter((s) => s.enabled).length;
 
-  const cardStyle = {
-    background: "#111",
-    border: "1px solid #222",
-    borderRadius: "0.75rem",
-    padding: "1rem 1.25rem",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  };
-
   return (
     <div>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem" }}>Skills</h1>
-      <p style={{ color: "#888", marginBottom: "1.5rem" }}>
+      <h1 className="text-2xl font-bold mb-2">Skills</h1>
+      <p className="text-muted-foreground mb-6">
         Enable or disable capabilities for your assistant. {enabledCount} of {skills.length} skills enabled.
       </p>
 
       {/* Instructions */}
-      <div
-        style={{
-          background: "#0d1117",
-          border: "1px solid #1c2333",
-          borderRadius: "0.75rem",
-          padding: "1.25rem",
-          marginBottom: "1.5rem",
-          fontSize: "0.8125rem",
-          color: "#c9d1d9",
-          lineHeight: 1.6,
-        }}
-      >
-        <h4 style={{ fontSize: "0.9375rem", fontWeight: 600, marginBottom: "0.5rem", color: "#fbbf24" }}>
-          How skills work
-        </h4>
-        <p style={{ marginBottom: "0.5rem" }}>
-          Skills are capabilities your assistant can use when responding to your messages.
-          Toggle them on or off depending on what you need.
-        </p>
-        <ul style={{ margin: 0, paddingLeft: "1.25rem", color: "#888" }}>
-          <li><strong style={{ color: "#c9d1d9" }}>Core skills</strong> -- Memory, summarization, and translation are always useful to keep enabled.</li>
-          <li><strong style={{ color: "#c9d1d9" }}>Research skills</strong> -- Web search and browsing let your assistant find up-to-date information.</li>
-          <li><strong style={{ color: "#c9d1d9" }}>Integration skills</strong> -- Google Drive, OneDrive, etc. require connecting the service first (see Integrations page).</li>
-          <li><strong style={{ color: "#c9d1d9" }}>Communication skills</strong> -- Email read/send require either an integration or the Email channel configured.</li>
-        </ul>
-      </div>
+      <Card className="mb-6 border-primary/20 bg-muted/50">
+        <CardContent className="pt-0 pb-0">
+          <div className="flex items-start gap-2 mb-2">
+            <Lightbulb className="size-4 mt-0.5 text-yellow-500 shrink-0" />
+            <h4 className="text-[0.9375rem] font-semibold text-yellow-500">
+              How skills work
+            </h4>
+          </div>
+          <p className="text-sm text-foreground leading-relaxed mb-2">
+            Skills are capabilities your assistant can use when responding to your messages.
+            Toggle them on or off depending on what you need.
+          </p>
+          <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+            <li><strong className="text-foreground">Core skills</strong> -- Memory, summarization, and translation are always useful to keep enabled.</li>
+            <li><strong className="text-foreground">Research skills</strong> -- Web search and browsing let your assistant find up-to-date information.</li>
+            <li><strong className="text-foreground">Integration skills</strong> -- Google Drive, OneDrive, etc. require connecting the service first (see Integrations page).</li>
+            <li><strong className="text-foreground">Communication skills</strong> -- Email read/send require either an integration or the Email channel configured.</li>
+          </ul>
+        </CardContent>
+      </Card>
 
       {error && (
-        <div style={{ background: "#331111", color: "#ff6b6b", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
-          {error}
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="size-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Category filter */}
-      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+      <div className="flex gap-2 mb-6 flex-wrap">
         {categories.map((cat) => (
-          <button
+          <Button
             key={cat}
+            variant={filter === cat ? "default" : "outline"}
+            size="sm"
+            className="rounded-full"
             onClick={() => setFilter(cat)}
-            style={{
-              padding: "0.375rem 0.75rem",
-              borderRadius: "1rem",
-              border: "1px solid",
-              borderColor: filter === cat ? "#fff" : "#333",
-              background: filter === cat ? "#fff" : "transparent",
-              color: filter === cat ? "#000" : "#888",
-              cursor: "pointer",
-              fontSize: "0.8125rem",
-              fontWeight: filter === cat ? 600 : 400,
-            }}
           >
             {cat === "all" ? "All" : CATEGORY_LABELS[cat] ?? cat}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Skills list */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div className="flex flex-col gap-2">
         {filtered.map((skill) => (
-          <div key={skill.id} style={cardStyle}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-                <span style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{skill.name}</span>
-                <span
-                  style={{
-                    fontSize: "0.6875rem",
-                    padding: "0.125rem 0.5rem",
-                    borderRadius: "1rem",
-                    background: "#1a1a1a",
-                    color: "#888",
-                  }}
-                >
-                  {CATEGORY_LABELS[skill.category] ?? skill.category}
-                </span>
+          <Card key={skill.id} className="py-4">
+            <CardContent className="flex items-center justify-between pt-0 pb-0">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-semibold text-[0.9375rem]">{skill.name}</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {CATEGORY_LABELS[skill.category] ?? skill.category}
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground text-sm">{skill.description}</p>
               </div>
-              <div style={{ color: "#888", fontSize: "0.8125rem" }}>{skill.description}</div>
-            </div>
 
-            <button
-              onClick={() => toggleSkill(skill.id, skill.enabled)}
-              disabled={toggling === skill.id}
-              style={{
-                padding: "0.375rem 1rem",
-                borderRadius: "0.375rem",
-                border: "1px solid",
-                borderColor: skill.enabled ? "#4ade80" : "#333",
-                background: skill.enabled ? "rgba(74, 222, 128, 0.1)" : "transparent",
-                color: skill.enabled ? "#4ade80" : "#888",
-                cursor: toggling === skill.id ? "wait" : "pointer",
-                fontWeight: 500,
-                fontSize: "0.8125rem",
-                minWidth: "5rem",
-                opacity: toggling === skill.id ? 0.5 : 1,
-              }}
-            >
-              {skill.enabled ? "Enabled" : "Disabled"}
-            </button>
-          </div>
+              <div className="flex items-center gap-3 ml-4 shrink-0">
+                <span className={cn(
+                  "text-xs font-medium",
+                  skill.enabled ? "text-green-500" : "text-muted-foreground"
+                )}>
+                  {skill.enabled ? "Enabled" : "Disabled"}
+                </span>
+                <Switch
+                  checked={skill.enabled}
+                  onCheckedChange={() => toggleSkill(skill.id, skill.enabled)}
+                  disabled={toggling === skill.id}
+                />
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

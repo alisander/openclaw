@@ -1,4 +1,5 @@
 import { query, queryOne, queryRows } from "../db/connection.js";
+import { encrypt, decrypt } from "./encryption.js";
 
 export type IntegrationProvider = "google" | "microsoft";
 
@@ -167,6 +168,10 @@ export async function saveIntegration(params: {
   expiresAt?: Date;
   scopes?: string;
 }): Promise<void> {
+  // Encrypt tokens before storing
+  const encAccessToken = encrypt(params.accessToken);
+  const encRefreshToken = params.refreshToken ? encrypt(params.refreshToken) : null;
+
   await query(
     `INSERT INTO user_integrations (tenant_id, provider, email, access_token, refresh_token, expires_at, scopes)
      VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -181,8 +186,8 @@ export async function saveIntegration(params: {
       params.tenantId,
       params.provider,
       params.email ?? null,
-      params.accessToken,
-      params.refreshToken ?? null,
+      encAccessToken,
+      encRefreshToken,
       params.expiresAt ?? null,
       params.scopes ?? null,
     ],
@@ -193,17 +198,169 @@ export async function getIntegration(
   tenantId: string,
   provider: IntegrationProvider,
 ): Promise<UserIntegration | null> {
-  return queryOne<UserIntegration>(
+  const row = await queryOne<UserIntegration>(
     "SELECT * FROM user_integrations WHERE tenant_id = $1 AND provider = $2",
     [tenantId, provider],
   );
+  return row ? decryptIntegration(row) : null;
 }
 
 export async function listIntegrations(tenantId: string): Promise<UserIntegration[]> {
-  return queryRows<UserIntegration>(
+  const rows = await queryRows<UserIntegration>(
     "SELECT * FROM user_integrations WHERE tenant_id = $1 ORDER BY provider",
     [tenantId],
   );
+  return rows.map(decryptIntegration);
+}
+
+function decryptIntegration(row: UserIntegration): UserIntegration {
+  return {
+    ...row,
+    access_token: row.access_token ? decrypt(row.access_token) : row.access_token,
+    refresh_token: row.refresh_token ? decrypt(row.refresh_token) : row.refresh_token,
+  };
+}
+
+// ── Token Refresh ──
+
+export async function refreshGoogleToken(params: {
+  refreshToken: string;
+  clientId: string;
+  clientSecret: string;
+}): Promise<{ accessToken: string; expiresAt: Date }> {
+  const resp = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      refresh_token: params.refreshToken,
+      client_id: params.clientId,
+      client_secret: params.clientSecret,
+      grant_type: "refresh_token",
+    }),
+  });
+  const data = (await resp.json()) as {
+    access_token: string;
+    expires_in: number;
+    error?: string;
+    error_description?: string;
+  };
+  if (!resp.ok || data.error) {
+    throw new Error(`Google token refresh failed: ${data.error_description ?? data.error ?? resp.statusText}`);
+  }
+  return {
+    accessToken: data.access_token,
+    expiresAt: new Date(Date.now() + data.expires_in * 1000),
+  };
+}
+
+export async function refreshMicrosoftToken(params: {
+  refreshToken: string;
+  clientId: string;
+  clientSecret: string;
+  tenantId?: string;
+}): Promise<{ accessToken: string; refreshToken: string; expiresAt: Date }> {
+  const tenant = params.tenantId ?? "common";
+  const resp = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      refresh_token: params.refreshToken,
+      client_id: params.clientId,
+      client_secret: params.clientSecret,
+      grant_type: "refresh_token",
+      scope: MICROSOFT_SCOPES,
+    }),
+  });
+  const data = (await resp.json()) as {
+    access_token: string;
+    refresh_token: string;
+    expires_in: number;
+    error?: string;
+    error_description?: string;
+  };
+  if (!resp.ok || data.error) {
+    throw new Error(`Microsoft token refresh failed: ${data.error_description ?? data.error ?? resp.statusText}`);
+  }
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresAt: new Date(Date.now() + data.expires_in * 1000),
+  };
+}
+
+/**
+ * Get a valid access token for a tenant's integration.
+ * If the token is expired or expiring within 5 minutes, refreshes it automatically.
+ * Returns the (possibly refreshed) access token.
+ */
+export async function getValidAccessToken(
+  tenantId: string,
+  provider: IntegrationProvider,
+): Promise<string> {
+  const integration = await getIntegration(tenantId, provider);
+  if (!integration || integration.status !== "active") {
+    throw new Error(`No active ${provider} integration found`);
+  }
+
+  // Check if token is still valid (with 5 minute buffer)
+  const bufferMs = 5 * 60 * 1000;
+  const expiresAt = integration.expires_at ? new Date(integration.expires_at).getTime() : 0;
+  const isExpired = !expiresAt || Date.now() > expiresAt - bufferMs;
+
+  if (!isExpired) {
+    return integration.access_token;
+  }
+
+  // Token expired or expiring soon — refresh it
+  if (!integration.refresh_token) {
+    throw new Error(`${provider} access token expired and no refresh token available. Please reconnect.`);
+  }
+
+  console.log(`[saas-oauth] Refreshing ${provider} token for tenant ${tenantId}`);
+
+  let newAccessToken: string;
+  let newExpiresAt: Date;
+  let newRefreshToken: string | undefined;
+
+  if (provider === "google") {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    if (!clientId || !clientSecret) throw new Error("Google OAuth not configured");
+
+    const result = await refreshGoogleToken({
+      refreshToken: integration.refresh_token,
+      clientId,
+      clientSecret,
+    });
+    newAccessToken = result.accessToken;
+    newExpiresAt = result.expiresAt;
+  } else {
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+    if (!clientId || !clientSecret) throw new Error("Microsoft OAuth not configured");
+
+    const result = await refreshMicrosoftToken({
+      refreshToken: integration.refresh_token,
+      clientId,
+      clientSecret,
+    });
+    newAccessToken = result.accessToken;
+    newExpiresAt = result.expiresAt;
+    newRefreshToken = result.refreshToken; // Microsoft may rotate the refresh token
+  }
+
+  // Save the refreshed tokens (encrypted)
+  await saveIntegration({
+    tenantId,
+    provider,
+    email: integration.email ?? undefined,
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+    expiresAt: newExpiresAt,
+    scopes: integration.scopes ?? undefined,
+  });
+
+  return newAccessToken;
 }
 
 export async function disconnectIntegration(

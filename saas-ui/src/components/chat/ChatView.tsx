@@ -2,6 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Send, Bot, User, Loader2 } from "lucide-react";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -58,76 +64,87 @@ export function ChatView() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ flex: 1, overflow: "auto", padding: "1rem" }}>
+    <div className="flex flex-col h-full">
+      {/* Messages */}
+      <ScrollArea className="flex-1 p-4">
+        {messages.length === 0 && (
+          <div className="text-center text-muted-foreground mt-16">
+            <h2 className="text-xl font-semibold mb-2">Welcome to OpenClaw</h2>
+            <p>Send a message to start chatting with your AI assistant.</p>
+          </div>
+        )}
+
         {messages.map((msg, i) => (
           <div
             key={i}
-            style={{
-              marginBottom: "0.75rem",
-              padding: "0.75rem 1rem",
-              borderRadius: "0.75rem",
-              maxWidth: "80%",
-              marginLeft: msg.role === "user" ? "auto" : 0,
-              marginRight: msg.role === "user" ? 0 : "auto",
-              background: msg.role === "user" ? "#1a3a5c" : "#1a1a1a",
-              border: msg.role === "user" ? "none" : "1px solid #222",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-            }}
+            className={cn(
+              "flex items-start gap-3 mb-4",
+              msg.role === "user" ? "flex-row-reverse" : "flex-row"
+            )}
           >
-            {msg.content}
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarFallback
+                className={cn(
+                  msg.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+              </AvatarFallback>
+            </Avatar>
+
+            <div
+              className={cn(
+                "max-w-[80%] rounded-xl px-4 py-3 whitespace-pre-wrap break-words",
+                msg.role === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted"
+              )}
+            >
+              {msg.content}
+            </div>
           </div>
         ))}
+
         {loading && (
-          <div
-            style={{
-              padding: "0.75rem 1rem",
-              borderRadius: "0.75rem",
-              background: "#1a1a1a",
-              border: "1px solid #222",
-              color: "#666",
-              maxWidth: "80%",
-            }}
-          >
-            Thinking...
+          <div className="flex items-start gap-3 mb-4">
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarFallback className="bg-muted text-muted-foreground">
+                <Bot className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="max-w-[80%] rounded-xl px-4 py-3 bg-muted text-muted-foreground flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Thinking...
+            </div>
           </div>
         )}
+
         <div ref={messagesEndRef} />
-      </div>
-      <div style={{ padding: "0.75rem", borderTop: "1px solid #222", display: "flex", gap: "0.5rem" }}>
-        <input
+      </ScrollArea>
+
+      {/* Input */}
+      <div className="p-3 border-t flex gap-2">
+        <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a message..."
           disabled={loading}
-          style={{
-            flex: 1,
-            padding: "0.5rem 0.75rem",
-            borderRadius: "0.375rem",
-            border: "1px solid #333",
-            background: "#111",
-            color: "#fff",
-            outline: "none",
-          }}
+          className="flex-1"
         />
-        <button
+        <Button
           onClick={() => sendMessage(input)}
           disabled={loading || !input.trim()}
-          style={{
-            padding: "0.5rem 1rem",
-            borderRadius: "0.375rem",
-            border: "none",
-            background: "#fff",
-            color: "#000",
-            fontWeight: 600,
-            cursor: loading ? "wait" : "pointer",
-            opacity: loading || !input.trim() ? 0.5 : 1,
-          }}
+          size="icon"
         >
-          Send
-        </button>
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+        </Button>
       </div>
     </div>
   );

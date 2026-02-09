@@ -2,6 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { Lightbulb, Save, UserCircle } from "lucide-react";
 
 type Identity = {
   displayName: string;
@@ -76,205 +86,172 @@ export default function IdentityPage() {
         method: "POST",
         body: identity,
       });
-      setSuccess("Identity saved successfully");
+      toast.success("Identity saved successfully");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save identity");
+      toast.error(e instanceof Error ? e.message : "Failed to save identity");
     } finally {
       setSaving(false);
     }
   }
 
-  const inputStyle = {
-    width: "100%",
-    padding: "0.75rem",
-    borderRadius: "0.5rem",
-    border: "1px solid #333",
-    background: "#111",
-    color: "#fff",
-    fontSize: "0.875rem",
-    boxSizing: "border-box" as const,
-  };
-
-  const selectStyle = {
-    ...inputStyle,
-    appearance: "none" as const,
-    cursor: "pointer",
-  };
-
-  const cardStyle = {
-    background: "#111",
-    border: "1px solid #222",
-    borderRadius: "0.75rem",
-    padding: "1.5rem",
-    marginBottom: "1.5rem",
-  };
-
-  if (loading) return <div style={{ color: "#888", padding: "2rem" }}>Loading...</div>;
+  if (loading) return <div className="text-muted-foreground p-8">Loading...</div>;
 
   return (
-    <div style={{ maxWidth: "700px" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem" }}>Agent Identity</h1>
-      <p style={{ color: "#888", marginBottom: "1.5rem" }}>
+    <div className="max-w-[700px]">
+      <h1 className="text-2xl font-bold mb-1">Agent Identity</h1>
+      <p className="text-muted-foreground mb-6">
         Customize your assistant&apos;s personality, tone, and behavior.
       </p>
 
       {/* Instructions */}
-      <div
-        style={{
-          background: "#0d1117",
-          border: "1px solid #1c2333",
-          borderRadius: "0.75rem",
-          padding: "1.25rem",
-          marginBottom: "1.5rem",
-          fontSize: "0.8125rem",
-          color: "#c9d1d9",
-          lineHeight: 1.6,
-        }}
-      >
-        <h4 style={{ fontSize: "0.9375rem", fontWeight: 600, marginBottom: "0.5rem", color: "#fbbf24" }}>
-          Personalizing your assistant
-        </h4>
-        <p style={{ marginBottom: "0.75rem" }}>
-          These settings shape how your assistant communicates. Here is what each field does:
-        </p>
-        <ul style={{ margin: 0, paddingLeft: "1.25rem", color: "#888", marginBottom: "0.75rem" }}>
-          <li><strong style={{ color: "#c9d1d9" }}>Display Name</strong> -- The name shown in chat and notifications. Pick something memorable like &quot;Alex&quot; or &quot;My Work Assistant&quot;.</li>
-          <li><strong style={{ color: "#c9d1d9" }}>Avatar URL</strong> -- A link to an image used as your assistant&apos;s profile picture. Use any publicly accessible image URL.</li>
-          <li><strong style={{ color: "#c9d1d9" }}>Tone</strong> -- Controls the communication style: Professional for work, Casual for everyday use, Technical for developer-focused conversations.</li>
-          <li><strong style={{ color: "#c9d1d9" }}>Language</strong> -- The primary language your assistant will respond in. It can still understand other languages.</li>
-          <li><strong style={{ color: "#c9d1d9" }}>Personality Description</strong> -- A free-text description of how you want your assistant to behave. Be specific about expertise areas and communication preferences.</li>
-          <li><strong style={{ color: "#c9d1d9" }}>System Prompt</strong> -- Advanced: A raw system prompt that gives your assistant precise instructions. This overrides the tone and personality settings when set.</li>
-        </ul>
-        <div style={{ padding: "0.625rem 0.75rem", background: "#1a1500", border: "1px solid #3a2f00", borderRadius: "0.375rem", color: "#fbbf24", fontSize: "0.75rem", lineHeight: 1.5 }}>
-          Tip: Start with just a Display Name, Tone, and Language. You can refine the Personality and System Prompt later as you use your assistant and discover what works best.
-        </div>
-      </div>
+      <Alert className="mb-6">
+        <Lightbulb className="size-4" />
+        <AlertTitle className="text-[#f3c97a]">Personalizing your assistant</AlertTitle>
+        <AlertDescription>
+          <p className="mb-3">
+            These settings shape how your assistant communicates. Here is what each field does:
+          </p>
+          <ul className="list-disc pl-5 text-muted-foreground space-y-1 mb-3">
+            <li><strong className="text-foreground">Display Name</strong> -- The name shown in chat and notifications. Pick something memorable like &quot;Alex&quot; or &quot;My Work Assistant&quot;.</li>
+            <li><strong className="text-foreground">Avatar URL</strong> -- A link to an image used as your assistant&apos;s profile picture. Use any publicly accessible image URL.</li>
+            <li><strong className="text-foreground">Tone</strong> -- Controls the communication style: Professional for work, Casual for everyday use, Technical for developer-focused conversations.</li>
+            <li><strong className="text-foreground">Language</strong> -- The primary language your assistant will respond in. It can still understand other languages.</li>
+            <li><strong className="text-foreground">Personality Description</strong> -- A free-text description of how you want your assistant to behave. Be specific about expertise areas and communication preferences.</li>
+            <li><strong className="text-foreground">System Prompt</strong> -- Advanced: A raw system prompt that gives your assistant precise instructions. This overrides the tone and personality settings when set.</li>
+          </ul>
+          <div className="rounded-md border border-[rgba(243,201,122,0.2)] bg-muted/50 px-3 py-2.5 text-xs text-[#f3c97a] leading-relaxed">
+            Tip: Start with just a Display Name, Tone, and Language. You can refine the Personality and System Prompt later as you use your assistant and discover what works best.
+          </div>
+        </AlertDescription>
+      </Alert>
 
       {error && (
-        <div style={{ background: "#331111", color: "#ff6b6b", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
-          {error}
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
       {success && (
-        <div style={{ background: "#113311", color: "#4ade80", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
-          {success}
-        </div>
+        <Alert className="mb-4 border-green-500/30 text-green-400">
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
       )}
 
       {/* Basic Info */}
-      <div style={cardStyle}>
-        <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1.25rem" }}>Basic Information</h3>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserCircle className="size-5" />
+            Basic Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="displayName">Display Name</Label>
+            <Input
+              id="displayName"
+              type="text"
+              value={identity.displayName}
+              onChange={(e) => setIdentity({ ...identity, displayName: e.target.value })}
+              placeholder="My AI Assistant"
+            />
+          </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.375rem", color: "#888", fontSize: "0.8125rem" }}>
-            Display Name
-          </label>
-          <input
-            type="text"
-            value={identity.displayName}
-            onChange={(e) => setIdentity({ ...identity, displayName: e.target.value })}
-            placeholder="My AI Assistant"
-            style={inputStyle}
-          />
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.375rem", color: "#888", fontSize: "0.8125rem" }}>
-            Avatar URL
-          </label>
-          <input
-            type="url"
-            value={identity.avatarUrl}
-            onChange={(e) => setIdentity({ ...identity, avatarUrl: e.target.value })}
-            placeholder="https://example.com/avatar.png"
-            style={inputStyle}
-          />
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="avatarUrl">Avatar URL</Label>
+            <Input
+              id="avatarUrl"
+              type="url"
+              value={identity.avatarUrl}
+              onChange={(e) => setIdentity({ ...identity, avatarUrl: e.target.value })}
+              placeholder="https://example.com/avatar.png"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Personality */}
-      <div style={cardStyle}>
-        <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1.25rem" }}>Personality</h3>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-          <div>
-            <label style={{ display: "block", marginBottom: "0.375rem", color: "#888", fontSize: "0.8125rem" }}>
-              Tone
-            </label>
-            <select
-              value={identity.tone}
-              onChange={(e) => setIdentity({ ...identity, tone: e.target.value })}
-              style={selectStyle}
-            >
-              {TONES.map((t) => (
-                <option key={t.id} value={t.id}>{t.label}</option>
-              ))}
-            </select>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Personality</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Tone</Label>
+              <Select
+                value={identity.tone}
+                onValueChange={(value) => setIdentity({ ...identity, tone: value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a tone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TONES.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Language</Label>
+              <Select
+                value={identity.language}
+                onValueChange={(value) => setIdentity({ ...identity, language: value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>{l.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div>
-            <label style={{ display: "block", marginBottom: "0.375rem", color: "#888", fontSize: "0.8125rem" }}>
-              Language
-            </label>
-            <select
-              value={identity.language}
-              onChange={(e) => setIdentity({ ...identity, language: e.target.value })}
-              style={selectStyle}
-            >
-              {LANGUAGES.map((l) => (
-                <option key={l.id} value={l.id}>{l.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
 
-        <div>
-          <label style={{ display: "block", marginBottom: "0.375rem", color: "#888", fontSize: "0.8125rem" }}>
-            Personality Description
-          </label>
-          <textarea
-            value={identity.personality}
-            onChange={(e) => setIdentity({ ...identity, personality: e.target.value })}
-            placeholder="Describe your assistant's personality... e.g., 'Helpful and concise, with a slight sense of humor. Expert in technology and business.'"
-            rows={3}
-            style={{ ...inputStyle, resize: "vertical" as const }}
-          />
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="personality">Personality Description</Label>
+            <Textarea
+              id="personality"
+              value={identity.personality}
+              onChange={(e) => setIdentity({ ...identity, personality: e.target.value })}
+              placeholder="Describe your assistant's personality... e.g., 'Helpful and concise, with a slight sense of humor. Expert in technology and business.'"
+              rows={3}
+              className="resize-y"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* System Prompt */}
-      <div style={cardStyle}>
-        <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem" }}>System Prompt</h3>
-        <p style={{ color: "#666", fontSize: "0.8125rem", marginBottom: "1rem" }}>
-          Advanced: Provide a custom system prompt that defines your assistant&apos;s behavior. This overrides the default personality settings.
-        </p>
-
-        <textarea
-          value={identity.systemPrompt}
-          onChange={(e) => setIdentity({ ...identity, systemPrompt: e.target.value })}
-          placeholder="You are a helpful assistant specialized in..."
-          rows={8}
-          style={{ ...inputStyle, resize: "vertical" as const, fontFamily: "monospace", fontSize: "0.8125rem" }}
-        />
-      </div>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>System Prompt</CardTitle>
+          <CardDescription>
+            Advanced: Provide a custom system prompt that defines your assistant&apos;s behavior. This overrides the default personality settings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            value={identity.systemPrompt}
+            onChange={(e) => setIdentity({ ...identity, systemPrompt: e.target.value })}
+            placeholder="You are a helpful assistant specialized in..."
+            rows={8}
+            className="resize-y font-mono text-sm"
+          />
+        </CardContent>
+      </Card>
 
       {/* Save */}
-      <button
+      <Button
         onClick={handleSave}
         disabled={saving}
-        style={{
-          padding: "0.75rem 2rem",
-          borderRadius: "0.5rem",
-          border: "none",
-          background: "#fff",
-          color: "#000",
-          fontWeight: 600,
-          cursor: saving ? "wait" : "pointer",
-          opacity: saving ? 0.7 : 1,
-          fontSize: "0.9375rem",
-        }}
+        size="lg"
       >
+        <Save className="size-4" />
         {saving ? "Saving..." : "Save Identity"}
-      </button>
+      </Button>
     </div>
   );
 }

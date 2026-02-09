@@ -8,6 +8,7 @@ import { integrations } from "./routes/integrations.js";
 import { assistant } from "./routes/assistant.js";
 import { admin } from "./routes/admin.js";
 import { config } from "./routes/config.js";
+import { scheduledTasks } from "./routes/scheduled-tasks.js";
 import { rateLimitMiddleware } from "./middleware/rate-limit.js";
 
 export function createSaasApp(): Hono {
@@ -46,6 +47,9 @@ export function createSaasApp(): Hono {
 
   app.use("/api/config/*", rateLimitMiddleware());
   app.route("/api/config", config);
+
+  app.use("/api/scheduled-tasks/*", rateLimitMiddleware());
+  app.route("/api/scheduled-tasks", scheduledTasks);
 
   app.use("/api/admin/*", rateLimitMiddleware());
   app.route("/api/admin", admin);

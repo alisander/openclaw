@@ -1,6 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Users, Building2, Activity } from "lucide-react";
 
 type Stats = {
   activeUsers: number;
@@ -18,86 +28,116 @@ export default function AdminDashboardPage() {
     api<Stats>("/api/admin/stats").then(setStats).catch((e) => setError(e.message));
   }, []);
 
-  if (error) return <div style={{ color: "#ff6b6b", padding: "2rem" }}>Error: {error}</div>;
-  if (!stats) return <div style={{ color: "#888", padding: "2rem" }}>Loading...</div>;
-
-  const cardStyle = {
-    background: "#111",
-    border: "1px solid #222",
-    borderRadius: "0.75rem",
-    padding: "1.5rem",
-  };
+  if (error)
+    return (
+      <div className="p-8 text-destructive">Error: {error}</div>
+    );
+  if (!stats)
+    return (
+      <div className="p-8 text-muted-foreground">Loading...</div>
+    );
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "2rem" }}>Admin Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-8">Admin Dashboard</h1>
 
       {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "2rem" }}>
-        <div style={cardStyle}>
-          <div style={{ color: "#888", fontSize: "0.875rem" }}>Active Users</div>
-          <div style={{ fontSize: "2rem", fontWeight: 700 }}>{stats.activeUsers}</div>
-        </div>
-        <div style={cardStyle}>
-          <div style={{ color: "#888", fontSize: "0.875rem" }}>Total Tenants</div>
-          <div style={{ fontSize: "2rem", fontWeight: 700 }}>{stats.totalTenants}</div>
-        </div>
-        <div style={cardStyle}>
-          <div style={{ color: "#888", fontSize: "0.875rem" }}>Active Today</div>
-          <div style={{ fontSize: "2rem", fontWeight: 700 }}>{stats.activeToday}</div>
-        </div>
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Active Users
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats.activeUsers}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Tenants
+            </CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats.totalTenants}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Active Today
+            </CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats.activeToday}</div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+      <div className="grid grid-cols-2 gap-4">
         {/* Plan Breakdown */}
-        <div style={cardStyle}>
-          <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Plans</h3>
-          {stats.planBreakdown.length === 0 ? (
-            <div style={{ color: "#666" }}>No data</div>
-          ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #222" }}>
-                  <th style={{ textAlign: "left", padding: "0.5rem", color: "#888", fontWeight: 500 }}>Plan</th>
-                  <th style={{ textAlign: "right", padding: "0.5rem", color: "#888", fontWeight: 500 }}>Count</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.planBreakdown.map((p) => (
-                  <tr key={p.plan} style={{ borderBottom: "1px solid #1a1a1a" }}>
-                    <td style={{ padding: "0.5rem", textTransform: "capitalize" }}>{p.plan}</td>
-                    <td style={{ padding: "0.5rem", textAlign: "right" }}>{p.count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Plans</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.planBreakdown.length === 0 ? (
+              <p className="text-muted-foreground">No data</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Plan</TableHead>
+                    <TableHead className="text-right">Count</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats.planBreakdown.map((p) => (
+                    <TableRow key={p.plan}>
+                      <TableCell className="capitalize">{p.plan}</TableCell>
+                      <TableCell className="text-right">{p.count}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Channel Breakdown */}
-        <div style={cardStyle}>
-          <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Active Channels</h3>
-          {stats.channelBreakdown.length === 0 ? (
-            <div style={{ color: "#666" }}>No channels configured yet</div>
-          ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #222" }}>
-                  <th style={{ textAlign: "left", padding: "0.5rem", color: "#888", fontWeight: 500 }}>Channel</th>
-                  <th style={{ textAlign: "right", padding: "0.5rem", color: "#888", fontWeight: 500 }}>Enabled</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.channelBreakdown.map((ch) => (
-                  <tr key={ch.channel} style={{ borderBottom: "1px solid #1a1a1a" }}>
-                    <td style={{ padding: "0.5rem", textTransform: "capitalize" }}>{ch.channel}</td>
-                    <td style={{ padding: "0.5rem", textAlign: "right" }}>{ch.count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Active Channels</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.channelBreakdown.length === 0 ? (
+              <p className="text-muted-foreground">No channels configured yet</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Channel</TableHead>
+                    <TableHead className="text-right">Enabled</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats.channelBreakdown.map((ch) => (
+                    <TableRow key={ch.channel}>
+                      <TableCell className="capitalize">{ch.channel}</TableCell>
+                      <TableCell className="text-right">{ch.count}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

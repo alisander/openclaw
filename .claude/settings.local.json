@@ -15,7 +15,23 @@
       "Bash(npm install:*)",
       "Bash(NEXT_PUBLIC_API_URL=http://localhost:3000 npm run dev:*)",
       "Bash(del \"\\\\?\\\\C:\\\\GitHub\\\\openclaw\\\\openclaw\\\\nul\")",
-      "Bash(node -e \"let d='''';process.stdin.on\\(''data'',c=>d+=c\\);process.stdin.on\\(''end'',\\(\\)=>{const t=JSON.parse\\(d\\).accessToken;const http=require\\(''http''\\);http.get\\(''http://localhost:3000/api/dashboard/setup-status'',{headers:{Authorization:''Bearer ''+t}},r=>{let b='''';r.on\\(''data'',c=>b+=c\\);r.on\\(''end'',\\(\\)=>console.log\\(b\\)\\)}\\)}\\)\")"
+      "Bash(node -e \"let d='''';process.stdin.on\\(''data'',c=>d+=c\\);process.stdin.on\\(''end'',\\(\\)=>{const t=JSON.parse\\(d\\).accessToken;const http=require\\(''http''\\);http.get\\(''http://localhost:3000/api/dashboard/setup-status'',{headers:{Authorization:''Bearer ''+t}},r=>{let b='''';r.on\\(''data'',c=>b+=c\\);r.on\\(''end'',\\(\\)=>console.log\\(b\\)\\)}\\)}\\)\")",
+      "Bash(findstr:*)",
+      "Bash(docker exec:*)",
+      "Bash(node -e:*)",
+      "WebFetch(domain:clawhub.ai)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(npx kill-port:*)",
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Bash(xcopy:*)",
+      "Bash(powershell -Command \"New-Item -Path ''C:\\\\GitHub\\\\openclaw\\\\openclaw\\\\saas-ui\\\\src\\\\components\\\\ui'' -ItemType Directory -Force | Out-Null; Copy-Item -Path ''C:\\\\GitHub\\\\sfstudio\\\\sfadmin\\\\src\\\\components\\\\ui\\\\*.tsx'' -Destination ''C:\\\\GitHub\\\\openclaw\\\\openclaw\\\\saas-ui\\\\src\\\\components\\\\ui\\\\'' -Force; Write-Output ''Done''\")",
+      "Bash(powershell -Command:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

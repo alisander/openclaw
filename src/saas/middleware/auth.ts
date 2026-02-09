@@ -1,9 +1,31 @@
 import type { Context, Next } from "hono";
 import * as jose from "jose";
 
-const JWT_SECRET_KEY = new TextEncoder().encode(
-  process.env.OPENCLAW_SAAS_JWT_SECRET ?? "openclaw-saas-dev-secret-change-in-prod",
-);
+const DEV_SECRET = "openclaw-saas-dev-secret-change-in-prod";
+const jwtSecretStr = process.env.OPENCLAW_SAAS_JWT_SECRET ?? DEV_SECRET;
+
+if (jwtSecretStr === DEV_SECRET) {
+  if (process.env.NODE_ENV === "production") {
+    console.error(
+      "\n[SECURITY] CRITICAL: OPENCLAW_SAAS_JWT_SECRET is not set! " +
+        "Using the default development secret in production is UNSAFE.\n" +
+        "Set OPENCLAW_SAAS_JWT_SECRET to a random 64+ character string.\n",
+    );
+    process.exit(1);
+  } else {
+    console.warn(
+      "[saas-auth] WARNING: Using default JWT secret. Set OPENCLAW_SAAS_JWT_SECRET for production.",
+    );
+  }
+}
+
+if (jwtSecretStr.length < 32 && jwtSecretStr !== DEV_SECRET) {
+  console.warn(
+    "[saas-auth] WARNING: OPENCLAW_SAAS_JWT_SECRET is short (< 32 chars). Use a longer secret for security.",
+  );
+}
+
+const JWT_SECRET_KEY = new TextEncoder().encode(jwtSecretStr);
 const JWT_ISSUER = "openclaw-saas";
 const JWT_AUDIENCE = "openclaw-saas";
 

@@ -1,6 +1,29 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 
 type PricingEntry = {
   id: string;
@@ -21,7 +44,6 @@ export default function AdminPricingPage() {
   const [entries, setEntries] = useState<PricingEntry[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [actionMsg, setActionMsg] = useState("");
 
   // Form state
   const [formMode, setFormMode] = useState<"add" | "edit">("add");
@@ -47,11 +69,6 @@ export default function AdminPricingPage() {
   useEffect(() => {
     fetchPricing();
   }, [fetchPricing]);
-
-  function showMsg(msg: string) {
-    setActionMsg(msg);
-    setTimeout(() => setActionMsg(""), 3000);
-  }
 
   function resetForm() {
     setFormMode("add");
@@ -81,15 +98,15 @@ export default function AdminPricingPage() {
     const marginVal = parseFloat(marginPercent);
 
     if (!provider.trim() || !model.trim()) {
-      showMsg("Provider and model are required");
+      toast.error("Provider and model are required");
       return;
     }
     if (isNaN(inputVal) || isNaN(outputVal) || inputVal < 0 || outputVal < 0) {
-      showMsg("Input and output costs must be valid non-negative numbers");
+      toast.error("Input and output costs must be valid non-negative numbers");
       return;
     }
     if (isNaN(marginVal) || marginVal < 0) {
-      showMsg("Margin percent must be a valid non-negative number");
+      toast.error("Margin percent must be a valid non-negative number");
       return;
     }
 
@@ -104,11 +121,11 @@ export default function AdminPricingPage() {
 
     try {
       await api("/api/admin/pricing", { method: "POST", body });
-      showMsg(formMode === "add" ? "Pricing entry added" : "Pricing entry updated");
+      toast.success(formMode === "add" ? "Pricing entry added" : "Pricing entry updated");
       resetForm();
       fetchPricing();
     } catch (e: unknown) {
-      showMsg((e as Error).message);
+      toast.error((e as Error).message);
     }
   }
 
@@ -116,246 +133,201 @@ export default function AdminPricingPage() {
     if (!confirm(`Delete pricing for "${modelName}"?`)) return;
     try {
       await api(`/api/admin/pricing/${id}`, { method: "DELETE" });
-      showMsg("Pricing entry deleted");
+      toast.success("Pricing entry deleted");
       fetchPricing();
     } catch (e: unknown) {
-      showMsg((e as Error).message);
+      toast.error((e as Error).message);
     }
   }
 
-  const cardStyle = {
-    background: "#111",
-    border: "1px solid #222",
-    borderRadius: "0.75rem",
-    padding: "1.5rem",
-  };
-
-  const inputStyle = {
-    padding: "0.75rem",
-    borderRadius: "0.5rem",
-    border: "1px solid #333",
-    background: "#111",
-    color: "#fff",
-    fontSize: "0.875rem",
-    width: "100%",
-    boxSizing: "border-box" as const,
-  };
-
-  const btnPrimary = {
-    padding: "0.5rem 1rem",
-    borderRadius: "0.5rem",
-    border: "none",
-    background: "#fff",
-    color: "#000",
-    fontWeight: 600,
-    cursor: "pointer",
-    fontSize: "0.8rem",
-  };
-
-  const btnDanger = {
-    padding: "0.35rem 0.75rem",
-    borderRadius: "0.5rem",
-    border: "none",
-    background: "#ff6b6b",
-    color: "#000",
-    fontWeight: 600,
-    cursor: "pointer",
-    fontSize: "0.75rem",
-  };
-
-  const btnSecondary = {
-    padding: "0.5rem 1rem",
-    borderRadius: "0.5rem",
-    border: "1px solid #333",
-    background: "transparent",
-    color: "#ccc",
-    fontWeight: 500,
-    cursor: "pointer",
-    fontSize: "0.8rem",
-  };
-
   if (error && !entries.length) {
-    return <div style={{ color: "#ff6b6b", padding: "2rem" }}>Error: {error}</div>;
+    return <div className="p-8 text-destructive">Error: {error}</div>;
   }
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Model Pricing</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-bold">Model Pricing</h1>
         {!showForm && (
-          <button style={btnPrimary} onClick={() => { resetForm(); setShowForm(true); }}>
+          <Button onClick={() => { resetForm(); setShowForm(true); }}>
+            <Plus className="size-4" />
             Add Pricing
-          </button>
+          </Button>
         )}
       </div>
 
-      {actionMsg && (
-        <div style={{ background: "#113311", color: "#4ade80", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem" }}>
-          {actionMsg}
-        </div>
-      )}
-
       {error && (
-        <div style={{ color: "#ff6b6b", padding: "0.75rem", background: "#1a0000", borderRadius: "0.5rem", marginBottom: "1rem" }}>
+        <div className="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      {/* Add/Edit Form */}
-      {showForm && (
-        <div style={{ ...cardStyle, marginBottom: "1.5rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>
+      {/* Add/Edit Dialog */}
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) resetForm(); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
               {formMode === "add" ? "Add New Pricing" : "Edit Pricing"}
-            </h3>
-            <button style={btnSecondary} onClick={resetForm}>Cancel</button>
-          </div>
+            </DialogTitle>
+            <DialogDescription>
+              {formMode === "add"
+                ? "Configure pricing for a new model."
+                : "Update pricing configuration for this model."}
+            </DialogDescription>
+          </DialogHeader>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-            <div>
-              <label style={{ display: "block", color: "#888", fontSize: "0.8rem", marginBottom: "0.25rem" }}>Provider</label>
-              <input
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="provider">Provider</Label>
+              <Input
+                id="provider"
                 type="text"
                 value={provider}
                 onChange={(e) => setProvider(e.target.value)}
                 placeholder="e.g. anthropic, openai"
-                style={inputStyle}
               />
             </div>
-            <div>
-              <label style={{ display: "block", color: "#888", fontSize: "0.8rem", marginBottom: "0.25rem" }}>Model</label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="model">Model</Label>
+              <Input
+                id="model"
                 type="text"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 placeholder="e.g. claude-sonnet-4-5-20250929"
-                style={inputStyle}
               />
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-            <div>
-              <label style={{ display: "block", color: "#888", fontSize: "0.8rem", marginBottom: "0.25rem" }}>
-                Input Cost ($/Mtok)
-              </label>
-              <input
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="inputCost">Input Cost ($/Mtok)</Label>
+              <Input
+                id="inputCost"
                 type="number"
                 step="0.01"
                 min="0"
                 value={inputCost}
                 onChange={(e) => setInputCost(e.target.value)}
                 placeholder="3.00"
-                style={inputStyle}
               />
             </div>
-            <div>
-              <label style={{ display: "block", color: "#888", fontSize: "0.8rem", marginBottom: "0.25rem" }}>
-                Output Cost ($/Mtok)
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="outputCost">Output Cost ($/Mtok)</Label>
+              <Input
+                id="outputCost"
                 type="number"
                 step="0.01"
                 min="0"
                 value={outputCost}
                 onChange={(e) => setOutputCost(e.target.value)}
                 placeholder="15.00"
-                style={inputStyle}
               />
             </div>
-            <div>
-              <label style={{ display: "block", color: "#888", fontSize: "0.8rem", marginBottom: "0.25rem" }}>
-                Margin %
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="marginPercent">Margin %</Label>
+              <Input
+                id="marginPercent"
                 type="number"
                 step="0.1"
                 min="0"
                 value={marginPercent}
                 onChange={(e) => setMarginPercent(e.target.value)}
                 placeholder="30"
-                style={inputStyle}
               />
             </div>
           </div>
 
-          <button style={btnPrimary} onClick={handleSubmit}>
-            {formMode === "add" ? "Add Entry" : "Update Entry"}
-          </button>
-        </div>
-      )}
+          <DialogFooter>
+            <Button variant="outline" onClick={resetForm}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>
+              {formMode === "add" ? "Add Entry" : "Update Entry"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Pricing Table */}
       {loading ? (
-        <div style={{ color: "#888", padding: "2rem" }}>Loading...</div>
+        <div className="p-8 text-muted-foreground">Loading...</div>
       ) : (
-        <div style={cardStyle}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid #222" }}>
-                <th style={{ textAlign: "left", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Provider</th>
-                <th style={{ textAlign: "left", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Model</th>
-                <th style={{ textAlign: "right", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Input $/Mtok</th>
-                <th style={{ textAlign: "right", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Output $/Mtok</th>
-                <th style={{ textAlign: "right", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Margin %</th>
-                <th style={{ textAlign: "right", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Effective Input</th>
-                <th style={{ textAlign: "right", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Effective Output</th>
-                <th style={{ textAlign: "right", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.length === 0 ? (
-                <tr>
-                  <td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "#666" }}>
-                    No pricing entries configured. Click "Add Pricing" to create one.
-                  </td>
-                </tr>
-              ) : (
-                entries.map((e) => {
-                  const effectiveInput = e.inputCostPerMtok * (1 + e.marginPercent / 100);
-                  const effectiveOutput = e.outputCostPerMtok * (1 + e.marginPercent / 100);
-                  return (
-                    <tr key={e.id} style={{ borderBottom: "1px solid #1a1a1a" }}>
-                      <td style={{ padding: "0.75rem", fontSize: "0.875rem", textTransform: "capitalize" }}>{e.provider}</td>
-                      <td style={{ padding: "0.75rem", fontSize: "0.8rem", fontFamily: "monospace" }}>{e.model}</td>
-                      <td style={{ padding: "0.75rem", fontSize: "0.875rem", textAlign: "right" }}>
-                        ${e.inputCostPerMtok.toFixed(2)}
-                      </td>
-                      <td style={{ padding: "0.75rem", fontSize: "0.875rem", textAlign: "right" }}>
-                        ${e.outputCostPerMtok.toFixed(2)}
-                      </td>
-                      <td style={{ padding: "0.75rem", fontSize: "0.875rem", textAlign: "right" }}>
-                        {e.marginPercent.toFixed(1)}%
-                      </td>
-                      <td style={{ padding: "0.75rem", fontSize: "0.8rem", textAlign: "right", color: "#4ade80" }}>
-                        ${effectiveInput.toFixed(2)}
-                      </td>
-                      <td style={{ padding: "0.75rem", fontSize: "0.8rem", textAlign: "right", color: "#4ade80" }}>
-                        ${effectiveOutput.toFixed(2)}
-                      </td>
-                      <td style={{ padding: "0.75rem", textAlign: "right" }}>
-                        <div style={{ display: "flex", gap: "0.25rem", justifyContent: "flex-end" }}>
-                          <button
-                            style={{ ...btnSecondary, padding: "0.25rem 0.5rem", fontSize: "0.7rem" }}
-                            onClick={() => startEdit(e)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            style={{ ...btnDanger, padding: "0.25rem 0.5rem", fontSize: "0.7rem" }}
-                            onClick={() => handleDelete(e.id, e.model)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Card>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Provider</TableHead>
+                  <TableHead>Model</TableHead>
+                  <TableHead className="text-right">Input $/Mtok</TableHead>
+                  <TableHead className="text-right">Output $/Mtok</TableHead>
+                  <TableHead className="text-right">Margin %</TableHead>
+                  <TableHead className="text-right">Effective Input</TableHead>
+                  <TableHead className="text-right">Effective Output</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entries.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                      No pricing entries configured. Click &quot;Add Pricing&quot; to create one.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  entries.map((e) => {
+                    const effectiveInput = e.inputCostPerMtok * (1 + e.marginPercent / 100);
+                    const effectiveOutput = e.outputCostPerMtok * (1 + e.marginPercent / 100);
+                    return (
+                      <TableRow key={e.id}>
+                        <TableCell className="capitalize">
+                          <Badge variant="outline">{e.provider}</Badge>
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {e.model}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          ${e.inputCostPerMtok.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          ${e.outputCostPerMtok.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {e.marginPercent.toFixed(1)}%
+                        </TableCell>
+                        <TableCell className="text-right text-sm text-emerald-400">
+                          ${effectiveInput.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right text-sm text-emerald-400">
+                          ${effectiveOutput.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => startEdit(e)}
+                            >
+                              <Pencil className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="icon-sm"
+                              onClick={() => handleDelete(e.id, e.model)}
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export function CreditBalance() {
   const [balance, setBalance] = useState<number | null>(null);
@@ -12,14 +13,14 @@ export function CreditBalance() {
       .catch(() => setBalance(null));
   }, []);
 
-  if (balance === null) return <span style={{ color: "#888" }}>--</span>;
+  if (balance === null) return <span className="text-muted-foreground text-sm">--</span>;
 
   return (
     <span
-      style={{
-        fontWeight: 600,
-        color: balance > 0.5 ? "#4ade80" : balance > 0 ? "#fbbf24" : "#f87171",
-      }}
+      className={cn(
+        "text-sm font-semibold",
+        balance > 0.5 ? "text-emerald-500" : balance > 0 ? "text-amber-500" : "text-red-500"
+      )}
     >
       ${balance.toFixed(4)}
     </span>

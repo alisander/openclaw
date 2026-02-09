@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 export default function SettingsPage() {
   const [email, setEmail] = useState("");
@@ -10,8 +15,6 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [tenantInfo, setTenantInfo] = useState<{ id: string; agentId: string; plan: string } | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -28,175 +31,127 @@ export default function SettingsPage() {
 
   async function handleSave() {
     setSaving(true);
-    setError("");
-    setSuccess("");
     try {
       // For now, just show success (password change would need a dedicated endpoint)
-      setSuccess("Settings saved");
+      toast.success("Settings saved");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save");
+      toast.error(e instanceof Error ? e.message : "Failed to save");
     } finally {
       setSaving(false);
     }
   }
 
-  const cardStyle = {
-    background: "#111",
-    border: "1px solid #222",
-    borderRadius: "0.75rem",
-    padding: "1.5rem",
-    marginBottom: "1.5rem",
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "0.75rem",
-    borderRadius: "0.5rem",
-    border: "1px solid #333",
-    background: "#111",
-    color: "#fff",
-    fontSize: "0.875rem",
-    boxSizing: "border-box" as const,
-  };
-
-  const labelStyle = {
-    display: "block" as const,
-    marginBottom: "0.375rem",
-    color: "#888",
-    fontSize: "0.8125rem",
-  };
-
   return (
-    <div style={{ maxWidth: "600px" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "2rem" }}>Settings</h1>
-
-      {error && (
-        <div style={{ background: "#331111", color: "#ff6b6b", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
-          {error}
-        </div>
-      )}
-      {success && (
-        <div style={{ background: "#113311", color: "#4ade80", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
-          {success}
-        </div>
-      )}
+    <div className="max-w-[600px] space-y-6">
+      <h1 className="text-2xl font-bold">Settings</h1>
 
       {/* Account Info */}
-      <div style={cardStyle}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1.25rem" }}>Account</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Account</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              disabled
+              className="opacity-50 cursor-not-allowed"
+            />
+          </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={labelStyle}>Email</label>
-          <input
-            type="email"
-            value={email}
-            disabled
-            style={{ ...inputStyle, opacity: 0.5, cursor: "not-allowed" }}
-          />
-        </div>
-
-        <div>
-          <label style={labelStyle}>Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={inputStyle}
-          />
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Change Password */}
-      <div style={cardStyle}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1.25rem" }}>Change Password</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="current-password">Current Password</Label>
+            <Input
+              id="current-password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+          </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={labelStyle}>Current Password</label>
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            style={inputStyle}
-          />
-        </div>
-
-        <div>
-          <label style={labelStyle}>New Password</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Min 8 characters"
-            style={inputStyle}
-          />
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="new-password">New Password</Label>
+            <Input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Min 8 characters"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tenant Info */}
       {tenantInfo && (
-        <div style={cardStyle}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1.25rem" }}>Tenant Details</h2>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <div>
-              <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Tenant ID</div>
-              <div style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#ccc" }}>
-                {tenantInfo.id.slice(0, 8)}...
+        <Card>
+          <CardHeader>
+            <CardTitle>Tenant Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Tenant ID</div>
+                <div className="font-mono text-sm text-muted-foreground">
+                  {tenantInfo.id.slice(0, 8)}...
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Agent ID</div>
+                <div className="font-mono text-sm text-muted-foreground">
+                  {tenantInfo.agentId}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Plan</div>
+                <div className="text-sm capitalize">
+                  {tenantInfo.plan}
+                </div>
               </div>
             </div>
-            <div>
-              <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Agent ID</div>
-              <div style={{ fontFamily: "monospace", fontSize: "0.8125rem", color: "#ccc" }}>
-                {tenantInfo.agentId}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Plan</div>
-              <div style={{ fontSize: "0.8125rem", textTransform: "capitalize" }}>
-                {tenantInfo.plan}
-              </div>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Danger Zone */}
-      <div style={{ ...cardStyle, borderColor: "#3a1111" }}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem", color: "#ff6b6b" }}>Danger Zone</h2>
-        <p style={{ color: "#888", fontSize: "0.8125rem", marginBottom: "1rem" }}>
-          Permanently delete your account and all associated data.
-        </p>
-        <button
-          style={{
-            padding: "0.5rem 1rem",
-            borderRadius: "0.375rem",
-            border: "1px solid #ff6b6b",
-            background: "transparent",
-            color: "#ff6b6b",
-            cursor: "pointer",
-            fontSize: "0.8125rem",
-          }}
-        >
-          Delete Account
-        </button>
-      </div>
+      <Card className="border-destructive/40">
+        <CardHeader>
+          <CardTitle className="text-destructive">Danger Zone</CardTitle>
+          <CardDescription>
+            Permanently delete your account and all associated data.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
+            Delete Account
+          </Button>
+        </CardContent>
+      </Card>
 
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        style={{
-          padding: "0.75rem 2rem",
-          borderRadius: "0.5rem",
-          border: "none",
-          background: "#fff",
-          color: "#000",
-          fontWeight: 600,
-          cursor: saving ? "wait" : "pointer",
-          opacity: saving ? 0.7 : 1,
-        }}
-      >
+      <Button onClick={handleSave} disabled={saving}>
         {saving ? "Saving..." : "Save Settings"}
-      </button>
+      </Button>
     </div>
   );
 }

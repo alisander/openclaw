@@ -2,6 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
+import { ExternalLink, Info, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 type Channel = {
   id: string;
@@ -135,6 +145,24 @@ const CHANNEL_INSTRUCTIONS: Record<string, { steps: string[]; link?: string; lin
   },
 };
 
+function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case "active":
+      return "default";
+    case "pending":
+      return "secondary";
+    case "disabled":
+      return "outline";
+    case "not_configured":
+    default:
+      return "outline";
+  }
+}
+
+function getStatusLabel(status: string): string {
+  return status === "not_configured" ? "Not configured" : status;
+}
+
 export default function ChannelsPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [selected, setSelected] = useState<Channel | null>(null);
@@ -179,13 +207,14 @@ export default function ChannelsPage() {
         method: "POST",
         body: { enabled, config: configValues },
       });
-      setSuccess(`${selected.name} configuration saved`);
+      toast.success(`${selected.name} configuration saved`);
       await loadChannels();
       const updated = channels.find((c) => c.id === selected.id);
       if (updated) {
         setSelected({ ...updated, enabled, config: configValues });
       }
     } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save");
       setError(e instanceof Error ? e.message : "Failed to save");
     } finally {
       setSaving(false);
@@ -197,201 +226,159 @@ export default function ChannelsPage() {
     if (!confirm(`Remove ${selected.name} configuration?`)) return;
     try {
       await api(`/api/config/channels/${selected.id}`, { method: "DELETE" });
+      toast.success(`${selected.name} configuration removed`);
       setSelected(null);
       await loadChannels();
     } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to remove");
       setError(e instanceof Error ? e.message : "Failed to remove");
     }
   }
-
-  const cardStyle = {
-    background: "#111",
-    border: "1px solid #222",
-    borderRadius: "0.75rem",
-    padding: "1.25rem",
-    cursor: "pointer" as const,
-    transition: "border-color 0.15s",
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "0.75rem",
-    borderRadius: "0.5rem",
-    border: "1px solid #333",
-    background: "#111",
-    color: "#fff",
-    fontSize: "0.875rem",
-    boxSizing: "border-box" as const,
-  };
-
-  const statusColors: Record<string, string> = {
-    active: "#4ade80",
-    disabled: "#888",
-    pending: "#fbbf24",
-    not_configured: "#666",
-  };
 
   const instructions = selected ? CHANNEL_INSTRUCTIONS[selected.id] : null;
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem" }}>Channels</h1>
-      <p style={{ color: "#888", marginBottom: "2rem" }}>
+      <h1 className="text-2xl font-bold mb-1">Channels</h1>
+      <p className="text-muted-foreground mb-8">
         Connect your assistant to messaging platforms. Select a channel below to see setup instructions and configure it.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Channel List */}
-        <div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {channels.map((ch) => (
-              <div
-                key={ch.id}
-                onClick={() => selectChannel(ch)}
-                style={{
-                  ...cardStyle,
-                  borderColor: selected?.id === ch.id ? "#555" : "#222",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
-                  <span style={{ fontWeight: 600 }}>{ch.name}</span>
-                  <span style={{ fontSize: "0.75rem", color: statusColors[ch.status] ?? "#666" }}>
-                    {ch.status === "not_configured" ? "Not configured" : ch.status}
-                  </span>
+        <div className="flex flex-col gap-3">
+          {channels.map((ch) => (
+            <Card
+              key={ch.id}
+              className={cn(
+                "cursor-pointer transition-colors hover:border-muted-foreground/30 py-4",
+                selected?.id === ch.id && "border-muted-foreground/50"
+              )}
+              onClick={() => selectChannel(ch)}
+            >
+              <CardContent className="py-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-semibold">{ch.name}</span>
+                  <Badge variant={getStatusVariant(ch.status)}>
+                    {getStatusLabel(ch.status)}
+                  </Badge>
                 </div>
-                <div style={{ color: "#888", fontSize: "0.8125rem" }}>{ch.description}</div>
-              </div>
-            ))}
-          </div>
+                <p className="text-muted-foreground text-sm">{ch.description}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Config Panel */}
         <div>
           {!selected ? (
-            <div style={{ ...cardStyle, cursor: "default", textAlign: "center", color: "#666", padding: "3rem" }}>
-              Select a channel to see setup instructions
-            </div>
+            <Card className="py-12">
+              <CardContent className="flex items-center justify-center">
+                <p className="text-muted-foreground text-center">
+                  Select a channel to see setup instructions
+                </p>
+              </CardContent>
+            </Card>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div className="flex flex-col gap-4">
               {/* Instructions */}
               {instructions && (
-                <div
-                  style={{
-                    background: "#0d1117",
-                    border: "1px solid #1c2333",
-                    borderRadius: "0.75rem",
-                    padding: "1.25rem",
-                  }}
-                >
-                  <h4 style={{ fontSize: "0.9375rem", fontWeight: 600, marginBottom: "0.75rem", color: "#74b9ff" }}>
+                <Alert className="border-primary/20 bg-primary/5">
+                  <Info className="h-4 w-4 text-primary" />
+                  <AlertTitle className="text-primary font-semibold">
                     How to set up {selected.name}
-                  </h4>
-                  <ol style={{ margin: 0, paddingLeft: "1.25rem", color: "#c9d1d9", fontSize: "0.8125rem", lineHeight: 1.7 }}>
-                    {instructions.steps.map((step, i) => (
-                      <li key={i} style={{ marginBottom: "0.25rem" }}>{step}</li>
-                    ))}
-                  </ol>
+                  </AlertTitle>
+                  <AlertDescription>
+                    <ol className="list-decimal pl-5 text-foreground/90 text-sm leading-7 mt-2">
+                      {instructions.steps.map((step, i) => (
+                        <li key={i} className="mb-0.5">{step}</li>
+                      ))}
+                    </ol>
 
-                  {instructions.note && (
-                    <div style={{ marginTop: "0.75rem", padding: "0.625rem 0.75rem", background: "#1a1500", border: "1px solid #3a2f00", borderRadius: "0.375rem", color: "#fbbf24", fontSize: "0.75rem", lineHeight: 1.5 }}>
-                      Note: {instructions.note}
-                    </div>
-                  )}
+                    {instructions.note && (
+                      <div className="mt-3 flex items-start gap-2 rounded-md border border-yellow-500/20 bg-yellow-500/5 px-3 py-2.5">
+                        <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5 shrink-0" />
+                        <span className="text-yellow-500 text-xs leading-relaxed">
+                          {instructions.note}
+                        </span>
+                      </div>
+                    )}
 
-                  {instructions.link && (
-                    <a
-                      href={instructions.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: "inline-block", marginTop: "0.75rem", color: "#74b9ff", fontSize: "0.8125rem", textDecoration: "none" }}
-                    >
-                      {instructions.linkLabel ?? "Documentation"} -&gt;
-                    </a>
-                  )}
-                </div>
+                    {instructions.link && (
+                      <a
+                        href={instructions.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 mt-3 text-primary text-sm hover:underline"
+                      >
+                        {instructions.linkLabel ?? "Documentation"}
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                  </AlertDescription>
+                </Alert>
               )}
 
               {/* Config Form */}
-              <div style={{ ...cardStyle, cursor: "default" }}>
-                <h3 style={{ fontSize: "1.125rem", fontWeight: 600, marginBottom: "1.25rem" }}>
-                  {selected.name} Configuration
-                </h3>
-
-                {error && (
-                  <div style={{ background: "#331111", color: "#ff6b6b", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
-                    {error}
-                  </div>
-                )}
-                {success && (
-                  <div style={{ background: "#113311", color: "#4ade80", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
-                    {success}
-                  </div>
-                )}
-
-                {/* Enabled toggle */}
-                <div style={{ marginBottom: "1.25rem" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={enabled}
-                      onChange={(e) => setEnabled(e.target.checked)}
-                      style={{ width: "1.25rem", height: "1.25rem" }}
-                    />
-                    <span>Enabled</span>
-                  </label>
-                </div>
-
-                {/* Config fields */}
-                {Object.entries(selected.configSchema).map(([key]) => (
-                  <div key={key} style={{ marginBottom: "1rem" }}>
-                    <label style={{ display: "block", marginBottom: "0.375rem", color: "#888", fontSize: "0.8125rem" }}>
-                      {key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())}
-                    </label>
-                    <input
-                      type={key.toLowerCase().includes("token") || key.toLowerCase().includes("secret") || key.toLowerCase().includes("password") ? "password" : "text"}
-                      value={configValues[key] ?? ""}
-                      onChange={(e) => setConfigValues({ ...configValues, [key]: e.target.value })}
-                      placeholder={`Enter ${key}`}
-                      style={inputStyle}
-                    />
-                  </div>
-                ))}
-
-                <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.25rem" }}>
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    style={{
-                      flex: 1,
-                      padding: "0.75rem",
-                      borderRadius: "0.5rem",
-                      border: "none",
-                      background: "#fff",
-                      color: "#000",
-                      fontWeight: 600,
-                      cursor: saving ? "wait" : "pointer",
-                      opacity: saving ? 0.7 : 1,
-                    }}
-                  >
-                    {saving ? "Saving..." : "Save Configuration"}
-                  </button>
-                  {selected.configured && (
-                    <button
-                      onClick={handleDisconnect}
-                      style={{
-                        padding: "0.75rem 1.5rem",
-                        borderRadius: "0.5rem",
-                        border: "1px solid #ff6b6b",
-                        background: "transparent",
-                        color: "#ff6b6b",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Remove
-                    </button>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{selected.name} Configuration</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-5">
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
                   )}
-                </div>
-              </div>
+
+                  {/* Enabled toggle */}
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      id="channel-enabled"
+                      checked={enabled}
+                      onCheckedChange={setEnabled}
+                    />
+                    <Label htmlFor="channel-enabled" className="cursor-pointer">
+                      Enabled
+                    </Label>
+                  </div>
+
+                  {/* Config fields */}
+                  {Object.entries(selected.configSchema).map(([key]) => (
+                    <div key={key} className="space-y-2">
+                      <Label htmlFor={`config-${key}`} className="text-muted-foreground text-sm">
+                        {key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())}
+                      </Label>
+                      <Input
+                        id={`config-${key}`}
+                        type={key.toLowerCase().includes("token") || key.toLowerCase().includes("secret") || key.toLowerCase().includes("password") ? "password" : "text"}
+                        value={configValues[key] ?? ""}
+                        onChange={(e) => setConfigValues({ ...configValues, [key]: e.target.value })}
+                        placeholder={`Enter ${key}`}
+                      />
+                    </div>
+                  ))}
+
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex-1"
+                    >
+                      {saving ? "Saving..." : "Save Configuration"}
+                    </Button>
+                    {selected.configured && (
+                      <Button
+                        variant="destructive"
+                        onClick={handleDisconnect}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>

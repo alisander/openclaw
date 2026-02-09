@@ -1,8 +1,8 @@
 {
-  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
+  "/page": "app/page.js",
   "/(dashboard)/model/page": "app/(dashboard)/model/page.js",
-  "/(dashboard)/channels/page": "app/(dashboard)/channels/page.js",
-  "/(dashboard)/integrations/page": "app/(dashboard)/integrations/page.js",
-  "/(dashboard)/identity/page": "app/(dashboard)/identity/page.js",
-  "/(dashboard)/skills/page": "app/(dashboard)/skills/page.js"
+  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
+  "/(dashboard)/billing/page": "app/(dashboard)/billing/page.js",
+  "/(dashboard)/skills/page": "app/(dashboard)/skills/page.js",
+  "/(dashboard)/identity/page": "app/(dashboard)/identity/page.js"
 }

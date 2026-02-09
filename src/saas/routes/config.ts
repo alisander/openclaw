@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { authMiddleware, type JwtPayload } from "../middleware/auth.js";
 import { query, queryOne, queryRows } from "../db/connection.js";
+import { encryptChannelConfig, decryptChannelConfig } from "../services/encryption.js";
 
 const config = new Hono();
 
@@ -44,7 +45,7 @@ config.get("/channels", async (c) => {
       enabled: existing?.enabled ?? false,
       configured: !!existing,
       status: existing?.status ?? "not_configured",
-      config: existing?.config ?? {},
+      config: existing?.config ? decryptChannelConfig(existing.config) : {},
     };
   });
 
@@ -76,7 +77,7 @@ config.get("/channels/:channelId", async (c) => {
       enabled: existing?.enabled ?? false,
       configured: !!existing,
       status: existing?.status ?? "not_configured",
-      config: existing?.config ?? {},
+      config: existing?.config ? decryptChannelConfig(existing.config) : {},
     },
   });
 });
@@ -94,6 +95,8 @@ config.post("/channels/:channelId", async (c) => {
 
   const enabled = body.enabled ?? false;
   const channelConfig = body.config ?? {};
+  // Encrypt sensitive fields (tokens, secrets, passwords) before storing
+  const encryptedConfig = encryptChannelConfig(channelConfig);
 
   await query(
     `INSERT INTO tenant_channels (tenant_id, channel, enabled, config, status, updated_at)
@@ -103,7 +106,7 @@ config.post("/channels/:channelId", async (c) => {
        config = EXCLUDED.config,
        status = EXCLUDED.status,
        updated_at = NOW()`,
-    [user.tenantId, channelId, enabled, JSON.stringify(channelConfig), enabled ? "active" : "disabled"],
+    [user.tenantId, channelId, enabled, JSON.stringify(encryptedConfig), enabled ? "active" : "disabled"],
   );
 
   return c.json({ success: true });

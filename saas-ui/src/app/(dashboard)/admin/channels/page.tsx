@@ -1,6 +1,19 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 type ChannelSummary = {
   channel: string;
@@ -68,165 +81,131 @@ export default function AdminChannelsPage() {
       .finally(() => setDetailLoading(false));
   }
 
-  const cardStyle = {
-    background: "#111",
-    border: "1px solid #222",
-    borderRadius: "0.75rem",
-    padding: "1.5rem",
-  };
-
   if (error && !channels.length) {
-    return <div style={{ color: "#ff6b6b", padding: "2rem" }}>Error: {error}</div>;
+    return <div className="text-destructive p-8">Error: {error}</div>;
   }
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "2rem" }}>Channels Overview</h1>
+      <h1 className="text-2xl font-bold mb-8">Channels Overview</h1>
 
       {error && (
-        <div style={{ color: "#ff6b6b", padding: "0.75rem", background: "#1a0000", borderRadius: "0.5rem", marginBottom: "1rem" }}>
+        <div className="text-destructive p-3 bg-red-950 rounded-md mb-4">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div style={{ color: "#888", padding: "2rem" }}>Loading...</div>
+        <div className="text-muted-foreground p-8">Loading...</div>
       ) : channels.length === 0 ? (
-        <div style={cardStyle}>
-          <div style={{ color: "#666", textAlign: "center", padding: "2rem" }}>
-            No channels configured across any tenant
-          </div>
-        </div>
+        <Card>
+          <CardContent className="py-8">
+            <p className="text-muted-foreground text-center">
+              No channels configured across any tenant
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <>
           {/* Channel cards grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {channels.map((ch) => {
               const isSelected = selectedChannel === ch.channel;
               const enabledRatio = ch.totalConfigs > 0 ? ch.enabledCount / ch.totalConfigs : 0;
               return (
-                <div
+                <Card
                   key={ch.channel}
                   onClick={() => handleSelectChannel(ch.channel)}
-                  style={{
-                    ...cardStyle,
-                    cursor: "pointer",
-                    border: isSelected ? "1px solid #fff" : "1px solid #222",
-                    transition: "border-color 0.15s",
-                  }}
+                  className={cn(
+                    "cursor-pointer transition-colors",
+                    isSelected && "border-foreground"
+                  )}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
-                    <h3 style={{ fontSize: "1.1rem", fontWeight: 600, textTransform: "capitalize" }}>{ch.channel}</h3>
-                    <span style={{
-                      fontSize: "0.7rem",
-                      padding: "0.2rem 0.5rem",
-                      borderRadius: "0.25rem",
-                      background: isSelected ? "#222" : "#1a1a1a",
-                      color: "#888",
-                    }}>
+                  <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                    <CardTitle className="text-lg capitalize">{ch.channel}</CardTitle>
+                    <Badge variant={isSelected ? "secondary" : "outline"} className="text-xs">
                       {isSelected ? "Selected" : "Click to expand"}
-                    </span>
-                  </div>
+                    </Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-muted-foreground text-xs mb-1">Total Configs</p>
+                        <p className="text-2xl font-bold">{ch.totalConfigs}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs mb-1">Enabled</p>
+                        <p className="text-2xl font-bold text-emerald-400">{ch.enabledCount}</p>
+                      </div>
+                    </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                    <div>
-                      <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Total Configs</div>
-                      <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>{ch.totalConfigs}</div>
-                    </div>
-                    <div>
-                      <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Enabled</div>
-                      <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#4ade80" }}>{ch.enabledCount}</div>
-                    </div>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div style={{ marginTop: "1rem" }}>
-                    <div style={{ height: "6px", borderRadius: "3px", background: "#222", width: "100%" }}>
-                      <div style={{
-                        height: "6px",
-                        borderRadius: "3px",
-                        background: "#4ade80",
-                        width: `${enabledRatio * 100}%`,
-                        transition: "width 0.3s",
-                      }} />
-                    </div>
-                    <div style={{ color: "#666", fontSize: "0.7rem", marginTop: "0.25rem" }}>
+                    {/* Progress bar */}
+                    <Progress value={enabledRatio * 100} className="h-1.5 mb-1" />
+                    <p className="text-muted-foreground text-xs">
                       {(enabledRatio * 100).toFixed(0)}% enabled
-                    </div>
-                  </div>
-                </div>
+                    </p>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
 
           {/* Detail panel */}
           {selectedChannel && (
-            <div style={cardStyle}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>
-                  Tenants using <span style={{ textTransform: "capitalize" }}>{selectedChannel}</span>
-                </h3>
-                <button
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-base">
+                  Tenants using <span className="capitalize">{selectedChannel}</span>
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => { setSelectedChannel(null); setChannelDetail(null); }}
-                  style={{
-                    padding: "0.25rem 0.75rem",
-                    borderRadius: "0.5rem",
-                    border: "1px solid #333",
-                    background: "transparent",
-                    color: "#ccc",
-                    cursor: "pointer",
-                    fontSize: "0.8rem",
-                  }}
                 >
                   Close
-                </button>
-              </div>
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {detailError && (
+                  <div className="text-destructive mb-2">{detailError}</div>
+                )}
 
-              {detailError && (
-                <div style={{ color: "#ff6b6b", padding: "0.5rem", marginBottom: "0.5rem" }}>{detailError}</div>
-              )}
-
-              {detailLoading ? (
-                <div style={{ color: "#888" }}>Loading tenant details...</div>
-              ) : channelDetail && channelDetail.tenants.length === 0 ? (
-                <div style={{ color: "#666" }}>No tenants are using this channel</div>
-              ) : channelDetail ? (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #222" }}>
-                      <th style={{ textAlign: "left", padding: "0.5rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Email</th>
-                      <th style={{ textAlign: "left", padding: "0.5rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Tenant ID</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Status</th>
-                      <th style={{ textAlign: "left", padding: "0.5rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {channelDetail.tenants.map((t) => (
-                      <tr key={t.tenantId} style={{ borderBottom: "1px solid #1a1a1a" }}>
-                        <td style={{ padding: "0.5rem", fontSize: "0.875rem" }}>{t.email}</td>
-                        <td style={{ padding: "0.5rem", fontSize: "0.75rem", fontFamily: "monospace", color: "#888" }}>
-                          {t.tenantId.substring(0, 12)}...
-                        </td>
-                        <td style={{ padding: "0.5rem", textAlign: "center" }}>
-                          <span style={{
-                            color: t.enabled ? "#4ade80" : "#ff6b6b",
-                            background: t.enabled ? "#0a2a0a" : "#2a0a0a",
-                            padding: "0.2rem 0.5rem",
-                            borderRadius: "0.25rem",
-                            fontSize: "0.75rem",
-                          }}>
-                            {t.enabled ? "Enabled" : "Disabled"}
-                          </span>
-                        </td>
-                        <td style={{ padding: "0.5rem", fontSize: "0.8rem", color: "#888" }}>
-                          {new Date(t.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : null}
-            </div>
+                {detailLoading ? (
+                  <div className="text-muted-foreground">Loading tenant details...</div>
+                ) : channelDetail && channelDetail.tenants.length === 0 ? (
+                  <div className="text-muted-foreground">No tenants are using this channel</div>
+                ) : channelDetail ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Tenant ID</TableHead>
+                        <TableHead className="text-center">Status</TableHead>
+                        <TableHead>Created</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {channelDetail.tenants.map((t) => (
+                        <TableRow key={t.tenantId}>
+                          <TableCell className="text-sm">{t.email}</TableCell>
+                          <TableCell className="text-xs font-mono text-muted-foreground">
+                            {t.tenantId.substring(0, 12)}...
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant={t.enabled ? "default" : "destructive"}>
+                              {t.enabled ? "Enabled" : "Disabled"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {new Date(t.createdAt).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : null}
+              </CardContent>
+            </Card>
           )}
         </>
       )}

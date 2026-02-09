@@ -4,6 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api, setTokens, setUserInfo } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,90 +46,58 @@ export default function LoginPage() {
     }
   }
 
-  const inputStyle = {
-    width: "100%",
-    padding: "0.75rem",
-    borderRadius: "0.5rem",
-    border: "1px solid #333",
-    background: "#111",
-    color: "#fff",
-    fontSize: "1rem",
-    boxSizing: "border-box" as const,
-  };
-
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#0a0a0a",
-        color: "#fafafa",
-      }}
-    >
-      <form
-        onSubmit={handleSubmit}
-        style={{ width: "100%", maxWidth: "400px", padding: "2rem" }}
-      >
-        <h1 style={{ fontSize: "1.5rem", marginBottom: "2rem", textAlign: "center" }}>
-          Log in to OpenClaw
-        </h1>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Card className="w-full max-w-md">
+        <form onSubmit={handleSubmit}>
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Log in to OpenClaw</CardTitle>
+          </CardHeader>
 
-        {error && (
-          <div style={{ background: "#331111", color: "#ff6b6b", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem" }}>
-            {error}
-          </div>
-        )}
+          <CardContent className="space-y-4">
+            {error && (
+              <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.5rem", color: "#888" }}>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={inputStyle}
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
-        <div style={{ marginBottom: "1.5rem" }}>
-          <label style={{ display: "block", marginBottom: "0.5rem", color: "#888" }}>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={inputStyle}
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </CardContent>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            borderRadius: "0.5rem",
-            border: "none",
-            background: "#fff",
-            color: "#000",
-            fontSize: "1rem",
-            fontWeight: 600,
-            cursor: loading ? "wait" : "pointer",
-            opacity: loading ? 0.7 : 1,
-          }}
-        >
-          {loading ? "Logging in..." : "Log in"}
-        </button>
+          <CardFooter className="flex flex-col gap-4">
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Logging in..." : "Log in"}
+            </Button>
 
-        <p style={{ textAlign: "center", marginTop: "1.5rem", color: "#888" }}>
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" style={{ color: "#fff" }}>
-            Sign up
-          </Link>
-        </p>
-      </form>
+            <p className="text-center text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" className="text-primary hover:underline">
+                Sign up
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
+      </Card>
     </div>
   );
 }

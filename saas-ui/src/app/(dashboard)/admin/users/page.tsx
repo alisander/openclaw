@@ -1,6 +1,35 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 type User = {
   id: string;
@@ -101,60 +130,10 @@ export default function AdminUsersPage() {
     }
   }
 
-  const cardStyle = {
-    background: "#111",
-    border: "1px solid #222",
-    borderRadius: "0.75rem",
-    padding: "1.5rem",
-  };
-
-  const inputStyle = {
-    padding: "0.75rem",
-    borderRadius: "0.5rem",
-    border: "1px solid #333",
-    background: "#111",
-    color: "#fff",
-    fontSize: "0.875rem",
-    boxSizing: "border-box" as const,
-  };
-
-  const btnPrimary = {
-    padding: "0.5rem 1rem",
-    borderRadius: "0.5rem",
-    border: "none",
-    background: "#fff",
-    color: "#000",
-    fontWeight: 600,
-    cursor: "pointer",
-    fontSize: "0.8rem",
-  };
-
-  const btnDanger = {
-    padding: "0.5rem 1rem",
-    borderRadius: "0.5rem",
-    border: "none",
-    background: "#ff6b6b",
-    color: "#000",
-    fontWeight: 600,
-    cursor: "pointer",
-    fontSize: "0.8rem",
-  };
-
-  const btnSecondary = {
-    padding: "0.5rem 1rem",
-    borderRadius: "0.5rem",
-    border: "1px solid #333",
-    background: "transparent",
-    color: "#ccc",
-    fontWeight: 500,
-    cursor: "pointer",
-    fontSize: "0.8rem",
-  };
-
-  const statusColor = (status: string) => {
-    if (status === "active") return "#4ade80";
-    if (status === "suspended") return "#ff6b6b";
-    return "#fbbf24";
+  const statusBadgeVariant = (status: string) => {
+    if (status === "active") return "default" as const;
+    if (status === "suspended") return "destructive" as const;
+    return "secondary" as const;
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -162,188 +141,204 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "2rem" }}>User Management</h1>
+      <h1 className="text-2xl font-bold mb-8">User Management</h1>
 
       {actionMsg && (
-        <div style={{ background: "#113311", color: "#4ade80", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem" }}>
+        <div className="bg-emerald-950 text-emerald-400 px-4 py-3 rounded-md mb-4">
           {actionMsg}
         </div>
       )}
 
       {error && (
-        <div style={{ color: "#ff6b6b", padding: "0.75rem", background: "#1a0000", borderRadius: "0.5rem", marginBottom: "1rem" }}>
+        <div className="bg-red-950 text-destructive px-4 py-3 rounded-md mb-4">
           Error: {error}
         </div>
       )}
 
       {/* Search bar */}
-      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem", alignItems: "center" }}>
-        <input
+      <div className="flex gap-3 mb-6 items-center">
+        <Input
           type="text"
           placeholder="Search by email or name..."
           value={search}
           onChange={(e) => { setSearch(e.target.value); setOffset(0); }}
-          style={{ ...inputStyle, flex: 1 }}
+          className="flex-1"
         />
-        <div style={{ color: "#888", fontSize: "0.875rem", whiteSpace: "nowrap" }}>
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
           {total} user{total !== 1 ? "s" : ""} found
-        </div>
+        </span>
       </div>
 
       {/* Role change modal */}
-      {roleModal && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex",
-          alignItems: "center", justifyContent: "center", zIndex: 100,
-        }}>
-          <div style={{ ...cardStyle, width: "400px" }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>
-              Change Role for {roleModal.email}
-            </h3>
-            <select
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value)}
-              style={{ ...inputStyle, width: "100%", marginBottom: "1rem" }}
-            >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
-            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-              <button style={btnSecondary} onClick={() => setRoleModal(null)}>Cancel</button>
-              <button style={btnPrimary} onClick={handleChangeRole}>Save</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={!!roleModal} onOpenChange={(open) => { if (!open) setRoleModal(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Role</DialogTitle>
+            <DialogDescription>
+              Update the role for {roleModal?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <Select value={newRole} onValueChange={setNewRole}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="user">User</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRoleModal(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleChangeRole}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* User detail panel */}
       {selectedUser && (
-        <div style={{ ...cardStyle, marginBottom: "1.5rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-start justify-between">
             <div>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.25rem" }}>
+              <CardTitle className="text-lg">
                 {selectedUser.name || "Unnamed User"}
-              </h3>
-              <div style={{ color: "#888", fontSize: "0.875rem" }}>{selectedUser.email}</div>
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
             </div>
-            <button style={btnSecondary} onClick={() => setSelectedUser(null)}>Close</button>
-          </div>
+            <Button variant="outline" size="sm" onClick={() => setSelectedUser(null)}>
+              Close
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-4 mb-4">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">ID</p>
+                <p className="text-sm font-mono">{selectedUser.id}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Role</p>
+                <p className="capitalize">{selectedUser.role}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Status</p>
+                <Badge variant={statusBadgeVariant(selectedUser.status)} className="capitalize">
+                  {selectedUser.status}
+                </Badge>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Created</p>
+                <p className="text-sm">{new Date(selectedUser.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-            <div>
-              <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>ID</div>
-              <div style={{ fontSize: "0.8rem", fontFamily: "monospace" }}>{selectedUser.id}</div>
-            </div>
-            <div>
-              <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Role</div>
-              <div style={{ textTransform: "capitalize" }}>{selectedUser.role}</div>
-            </div>
-            <div>
-              <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Status</div>
-              <div style={{ color: statusColor(selectedUser.status), textTransform: "capitalize" }}>{selectedUser.status}</div>
-            </div>
-            <div>
-              <div style={{ color: "#888", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Created</div>
-              <div style={{ fontSize: "0.875rem" }}>{new Date(selectedUser.createdAt).toLocaleDateString()}</div>
-            </div>
-          </div>
+            <Separator className="my-4" />
 
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            {selectedUser.status === "active" ? (
-              <button style={btnDanger} onClick={() => handleSuspend(selectedUser.id)}>Suspend</button>
-            ) : (
-              <button style={btnPrimary} onClick={() => handleActivate(selectedUser.id)}>Activate</button>
-            )}
-            <button style={btnSecondary} onClick={() => { setRoleModal(selectedUser); setNewRole(selectedUser.role); }}>
-              Change Role
-            </button>
-            <button style={btnDanger} onClick={() => handleDelete(selectedUser.id)}>Delete</button>
-          </div>
-        </div>
+            <div className="flex gap-2">
+              {selectedUser.status === "active" ? (
+                <Button variant="destructive" size="sm" onClick={() => handleSuspend(selectedUser.id)}>
+                  Suspend
+                </Button>
+              ) : (
+                <Button size="sm" onClick={() => handleActivate(selectedUser.id)}>
+                  Activate
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setRoleModal(selectedUser); setNewRole(selectedUser.role); }}
+              >
+                Change Role
+              </Button>
+              <Button variant="destructive" size="sm" onClick={() => handleDelete(selectedUser.id)}>
+                Delete
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Users table */}
       {loading ? (
-        <div style={{ color: "#888", padding: "2rem" }}>Loading...</div>
+        <div className="p-8 text-muted-foreground">Loading...</div>
       ) : (
-        <div style={cardStyle}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid #222" }}>
-                <th style={{ textAlign: "left", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Email</th>
-                <th style={{ textAlign: "left", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Name</th>
-                <th style={{ textAlign: "left", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Role</th>
-                <th style={{ textAlign: "left", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Status</th>
-                <th style={{ textAlign: "left", padding: "0.75rem", color: "#888", fontWeight: 500, fontSize: "0.8rem" }}>Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.length === 0 ? (
-                <tr>
-                  <td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#666" }}>
-                    No users found
-                  </td>
-                </tr>
-              ) : (
-                users.map((u) => (
-                  <tr
-                    key={u.id}
-                    onClick={() => setSelectedUser(u)}
-                    style={{
-                      borderBottom: "1px solid #1a1a1a",
-                      cursor: "pointer",
-                      background: selectedUser?.id === u.id ? "#1a1a1a" : "transparent",
-                    }}
-                  >
-                    <td style={{ padding: "0.75rem", fontSize: "0.875rem" }}>{u.email}</td>
-                    <td style={{ padding: "0.75rem", fontSize: "0.875rem", color: u.name ? "#fafafa" : "#666" }}>
-                      {u.name || "--"}
-                    </td>
-                    <td style={{ padding: "0.75rem", fontSize: "0.875rem", textTransform: "capitalize" }}>{u.role}</td>
-                    <td style={{ padding: "0.75rem", fontSize: "0.875rem" }}>
-                      <span style={{
-                        color: statusColor(u.status),
-                        background: u.status === "active" ? "#0a2a0a" : u.status === "suspended" ? "#2a0a0a" : "#2a2a0a",
-                        padding: "0.2rem 0.5rem",
-                        borderRadius: "0.25rem",
-                        fontSize: "0.75rem",
-                        textTransform: "capitalize",
-                      }}>
-                        {u.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: "0.75rem", fontSize: "0.875rem", color: "#888" }}>
-                      {new Date(u.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      No users found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  users.map((u) => (
+                    <TableRow
+                      key={u.id}
+                      onClick={() => setSelectedUser(u)}
+                      className={`cursor-pointer ${
+                        selectedUser?.id === u.id ? "bg-muted" : ""
+                      }`}
+                    >
+                      <TableCell className="text-sm">{u.email}</TableCell>
+                      <TableCell className={`text-sm ${u.name ? "" : "text-muted-foreground"}`}>
+                        {u.name || "--"}
+                      </TableCell>
+                      <TableCell className="text-sm capitalize">{u.role}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusBadgeVariant(u.status)} className="capitalize">
+                          {u.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #222" }}>
-              <button
-                style={{ ...btnSecondary, opacity: currentPage <= 1 ? 0.4 : 1 }}
-                disabled={currentPage <= 1}
-                onClick={() => setOffset(Math.max(0, offset - limit))}
-              >
-                Previous
-              </button>
-              <span style={{ color: "#888", fontSize: "0.875rem" }}>
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                style={{ ...btnSecondary, opacity: currentPage >= totalPages ? 0.4 : 1 }}
-                disabled={currentPage >= totalPages}
-                onClick={() => setOffset(offset + limit)}
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <>
+                <Separator />
+                <div className="flex justify-between items-center p-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage <= 1}
+                    onClick={() => setOffset(Math.max(0, offset - limit))}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setOffset(offset + limit)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -3,6 +3,7 @@
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
+      "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
     "/page": [
@@ -10,95 +11,60 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/(auth)/signup/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/signup/page.js"
-    ],
-    "/(auth)/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/login/page.js"
-    ],
     "/(dashboard)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/layout.js"
+    ],
+    "/(dashboard)/dashboard/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/dashboard/page.js"
     ],
     "/(dashboard)/chat/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/chat/page.js"
     ],
-    "/(dashboard)/billing/page": [
+    "/(dashboard)/channels/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/billing/page.js"
-    ],
-    "/(dashboard)/integrations/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/integrations/page.js"
+      "static/chunks/app/(dashboard)/channels/page.js"
     ],
     "/(dashboard)/settings/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/settings/page.js"
     ],
-    "/(dashboard)/admin/page": [
+    "/(dashboard)/billing/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/admin/page.js"
+      "static/chunks/app/(dashboard)/billing/page.js"
     ],
     "/(dashboard)/skills/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/skills/page.js"
     ],
-    "/(dashboard)/channels/page": [
+    "/(dashboard)/model/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/channels/page.js"
-    ],
-    "/(dashboard)/admin/users/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/admin/users/page.js"
-    ],
-    "/(dashboard)/admin/tenants/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/admin/tenants/page.js"
-    ],
-    "/(dashboard)/admin/revenue/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/admin/revenue/page.js"
-    ],
-    "/(dashboard)/admin/pricing/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/admin/pricing/page.js"
+      "static/chunks/app/(dashboard)/model/page.js"
     ],
     "/(dashboard)/identity/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/identity/page.js"
     ],
-    "/(dashboard)/admin/channels/page": [
+    "/(dashboard)/scheduled-tasks/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/admin/channels/page.js"
+      "static/chunks/app/(dashboard)/scheduled-tasks/page.js"
     ],
-    "/(dashboard)/model/page": [
+    "/(dashboard)/integrations/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/model/page.js"
-    ],
-    "/(dashboard)/dashboard/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/dashboard/page.js"
+      "static/chunks/app/(dashboard)/integrations/page.js"
     ]
   }
 }
